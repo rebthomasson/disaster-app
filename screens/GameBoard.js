@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import React, { use, useState } from 'react';
+import React, { useState } from 'react';
 import Tiles from "../entities/Tiles";
 import Player from "../entities/Player";
 import InventoryItem from "../entities/InventoryItem";

@@ -1,7 +1,7 @@
 import { Circle } from "react-native-svg";
 import React from "react";
 
-export default function InventoryItem({ row, column, tile_size, onPress }) {
+export default function Player({ row, column, tile_size, color = 'pink'}) {
     const calc_x = column * tile_size + tile_size / 2;
     const calc_y = row *  tile_size + tile_size / 2;
 
@@ -10,8 +10,7 @@ export default function InventoryItem({ row, column, tile_size, onPress }) {
             cx={calc_x}
             cy={calc_y}
             r={tile_size * 0.3}
-            fill="#A98EBF"
-            onPressIn={onPress}
+            fill={color}
         />
     );
 }

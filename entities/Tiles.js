@@ -1,16 +1,41 @@
-import { Circle } from "react-native-svg";
-import React from "react";
+import { Rect, G } from 'react-native-svg';
+import React from 'react';
 
-export default function Player({ row, column, tile_size, color = 'pink'}) {
-    const calc_x = column * tile_size + tile_size / 2;
-    const calc_y = row *  tile_size + tile_size / 2;
+export default function Tiles({ 
+  tile_size,
+  grid_size,
+  playerRow,
+  playerColumn,
+  onTilePress,
+  items,
+  tasks 
+}) {
+  return (
+    <>
+      {[...Array(grid_size)].map((_, row) =>
+        [...Array(grid_size)].map((_, column) => {
+          const isPlayerTile = row === playerRow && column === playerColumn;
 
-    return (
-        <Circle
-            cx={calc_x}
-            cy={calc_y}
-            r={tile_size * 0.3}
-            fill={color}
-        />
-    );
+          return (
+            <G
+              key={`${row}-${column}`}
+              onPressIn={() => {
+                onTilePress(row, column);
+              }}
+            >
+              <Rect
+                x={column * tile_size}
+                y={row * tile_size}
+                width={tile_size}
+                height={tile_size}
+                stroke="black"
+                strokeWidth="2"
+                fill={isPlayerTile ? "#d0f0ff" : "white"}
+              />
+            </G>
+          );
+        })
+      )}
+    </>
+  );
 }
