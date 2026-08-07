@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Button } from 'react-native';
 import React, { useState } from 'react';
-import Tiles from "../entities/Tiles";
 import Player from "../entities/Player";
+import Path from "../entities/Path";
 import InventoryItem from "../entities/InventoryItem";
-import Svg from 'react-native-svg';
+import {Svg, Rect} from 'react-native-svg';
 import TaskModal from "../screens/TaskModal"; 
 import ItemModal from "../screens/ItemModal"; 
 import QuizModal from "../screens/QuizModal";
@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 //Configure tile size for the grid
 const tile_size = 70;
-const grid_size = 5;
 
 export default function GameBoard() {
     //Configuring state
@@ -23,16 +22,11 @@ export default function GameBoard() {
 
     const [completedTasks, setCompletedTasks] = useState([]);
 
-    const [playerRow, setPlayerRow] = useState(0);
-    const [playerColumn, setPlayerColumn] = useState(0);
+    const [playerPosition, setPlayerPosition] = useState(0);
     const [activeTask, setActiveTask] = useState(null);
     const [taskVisible, setTaskVisible] = useState(false);
     const [showLevelComplete, setShowLevelComplete] = useState(false);
 
-    const taskTiles = currentLevel.tasks;
-    const itemTiles = currentLevel.items;
-
-    const [items, setItems] = useState(currentLevel.items);
     const [inventory, setInventory] = useState([]);
 
     const [foundItem, setFoundItem] = useState(null);
@@ -40,31 +34,90 @@ export default function GameBoard() {
     const [quizVisible, setQuizVisible] = useState(false);
     const [activeQuiz, setActiveQuiz] = useState(null);
 
+    const [pathTiles, setPathTiles] = useState(currentLevel.pathTiles);
+
+    const totalTasks = pathTiles.filter(tile => tile.task).length;
+
+    const maxX = Math.max(...pathTiles.map(t => t.x)) + tile_size;
+    const maxY = Math.max(...pathTiles.map(t => t.y)) + tile_size;
+
     
     function completeTask(taskId) {
         if (!completedTasks.includes(taskId)) {
             const updated = [...completedTasks, taskId];
             setCompletedTasks(updated);
-            if (updated.length >= currentLevel.requirementsToWin) {
+
+            if (updated.length >= totalTasks) {
                 setShowLevelComplete(true);
             }
         }
     }
 
+    function rollDice() {
+        const roll = Math.floor(Math.random() * 6) + 1;
+
+        let newPosition = playerPosition;
+        let triggered = false;
+
+        // Check every tile between old and new position
+        for (let i = 1 + 1; i <= roll; i++) {
+            if (triggered) {
+                break;
+            }
+            const nextIndex = newPosition + 1;
+            if (nextIndex >= pathTiles.length) {
+                break;
+            }
+            const tile = pathTiles[nextIndex];
+
+            newPosition = nextIndex;
+
+            if (tile.task) {
+                setActiveTask(tile.task);
+                setTaskVisible(true);
+                triggered = true;
+                continue;
+            }
+            if (tile.item) {
+                collectItem(tile.item, tile.id);
+                triggered = true;
+                continue;
+
+            }
+            if (Math.random() < tile.eventChance) {
+                triggerEvent(tile);
+                triggered = true;
+                continue;
+            }
+        }
+
+        setPlayerPosition(newPosition);
+    }
+
+    function triggerEvent(tile) {
+        alert(`Event triggered on tile ${tile.id} with terrain ${tile.terrain}`);
+    }
+
     //Handles what to do when a tile is pressed on screen
-    function handleTilePress(row, column) {
+    function handleTilePress(tile, index) {
         //Get the row and column of the task
-        const task = taskTiles.find(t => t.row === row && t.column === column);
+        setPlayerPosition(index);
         
-        //Move the player tile to the new tile
-        setPlayerColumn(column);
-        setPlayerRow(row);
         
         //If it's a task tile, activates the task/shows it to the user
-        if (task) {
-            setActiveTask(task);
+        if (tile.task) {
+            setActiveTask(tile.task);
             setTaskVisible(true);
             return;
+        }
+
+        if (tile.item) {
+            collectItem(tile.item, tile.id);
+            return;
+        }
+
+        if (Math.random() < tile.eventChance) {
+            triggerEvent(tile);
         }
     }
 
@@ -75,29 +128,31 @@ export default function GameBoard() {
             setLevelIndex(0);
             setCompletedTasks([]);
             setShowLevelComplete(false);
-            setPlayerRow(0);
-            setPlayerColumn(0);
-            setItems(levels[0].items);
+            setPlayerPosition(0);
             setInventory([]);
+            setPathTiles(levels[0].pathTiles);
             return;
         }
         //Reset values and state
         setLevelIndex(levelIndex + 1);
         setCompletedTasks([]);
         setShowLevelComplete(false);
-        setPlayerRow(0);
-        setPlayerColumn(0);
-        setItems(levels[levelIndex + 1].items);
+        setPlayerPosition(0);
         setInventory([]);
+        setPathTiles(levels[levelIndex + 1].pathTiles);
     }
 
     //When item is collected
-    function collectItem(item) {
+    function collectItem(item, tileId) {
         //This add the item to the inventory
         setInventory(prev => [...prev, item]);
 
-        //This removes the item from the board
-        setItems(prev => prev.filter(i => i.id !== item.id));
+        // Clear item from the tile
+        const updatedTiles = pathTiles.map(tile =>
+            tile.id === tileId ? { ...tile, item: null } : tile
+        )
+
+        setPathTiles(updatedTiles);
         
         setFoundItem(item);
     }
@@ -112,38 +167,44 @@ export default function GameBoard() {
                     <View
                     style={[
                         styles.progressFill,
-                        { width: `${(completedTasks.length / currentLevel.requirementsToWin) * 100}%` }
+                        { width: `${(completedTasks.length / totalTasks) * 100}%` }
                     ]}
                     />
                 </View>
 
-                <Text style={styles.progressText}>{completedTasks.length} / {currentLevel.requirementsToWin} tasks completed </Text>
+                <Text style={styles.progressText}>{completedTasks.length} / {totalTasks} tasks completed </Text>
             </View>
             <View style={styles.boardContainer}>
                 <Svg
-                    width={grid_size *tile_size}
-                    height={grid_size*tile_size}
+                    width={maxX}
+                    height={maxY}
                     pointerEvents='box-none'
                 >
-                    <Tiles
-                        grid_size = {grid_size}
+                    <Rect
+                        x={0}
+                        y={0}
+                        width={maxX}
+                        height={maxY}
+                        fill="#cce5cc"   // light green for grass
+                    />
+                    <Path
                         tile_size = {tile_size}
-                        playerRow={playerRow}
-                        playerColumn={playerColumn}
-                        onTilePress={handleTilePress}
+                        pathTiles={pathTiles}
+                        playerPosition={playerPosition}
+                        //onTilePress={handleTilePress}
                     />
                     <Player
-                        row={playerRow}
-                        column={playerColumn}
+                        x = {pathTiles[playerPosition].x}
+                        y = {pathTiles[playerPosition].y}
                         tile_size={tile_size}
                     />
-                    {items.map(item => (
-                        <InventoryItem
-                            key={item.id}
-                            row={item.row}
-                            column={item.column}
+                    {pathTiles.map(tile => (
+                        tile.item && <InventoryItem
+                            key={tile.item.id}
+                            x={tile.x}
+                            y={tile.y}
                             tile_size={tile_size}
-                            onPress = {() => collectItem(item)}
+                            onPress = {() => collectItem(tile.item, tile.id)}
                         />
                     ))}
                 </Svg>
@@ -156,6 +217,11 @@ export default function GameBoard() {
                     ))}
                 </View>
             </View>    
+
+            <View style={{ marginTop: 20 }}>
+                <Text style={{ fontSize: 18, fontWeight: "bold" }}>Roll the Dice</Text>
+                <Button title="🎲 Roll" onPress={rollDice} />
+            </View>
 
             <TaskModal
                 visible={taskVisible}
