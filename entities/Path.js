@@ -1,4 +1,4 @@
-import {Rect, G, Line} from 'react-native-svg';
+import {Rect, G, Line, Text} from 'react-native-svg';
 import React from 'react';
 
 export default function Path({
@@ -25,6 +25,18 @@ export default function Path({
                     strokeWidth="2"
                     fill={isPlayerTile ? "#d0f0ff" : "white"}
                     />
+                    {tile.icon && (
+                        <Text
+                            x={tile.x + tile_size/2}
+                            y={tile.y + tile_size/2}
+                            fontSize={tile_size /2}
+                            fill="black"
+                            textAnchor="middle"
+                            alignmentBaseline="middle"
+                        >
+                            {tile.icon}
+                        </Text>
+                    )}
                 </G>
             );
         })}

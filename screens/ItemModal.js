@@ -16,10 +16,12 @@ export default function ItemModal({ item, onClose }) {
                     padding:20,
                     borderRadius: 10
                 }}>
-                    <Text style={{fontSize:18, marginBottom:10, alignItems: 'center'}}>
-                        {item.info || item.name}
+                    <Text style={{fontSize:24, marginBottom:10, alignItems: 'center', fontWeight: 'bold'}}>
+                        {item.name}
                     </Text>
-
+                    <Text style={{fontSize:18, marginBottom:10, alignItems: 'center'}}>
+                        {item.info}
+                    </Text>
                     <Button title='Close' onPress={onClose} />
                 </View>
             </View>

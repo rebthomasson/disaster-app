@@ -11,6 +11,7 @@ export default function mapGenrator(rows, columns, tileSize, gap) {
             tiles.push({
                 id: id++,
                 terrain: 'road',
+                icon: null,
                 eventChance: Math.random() * 0.4,
                 x: actualColumn * (tileSize + gap),
                 y: row * (tileSize + (gap * 2)),
@@ -19,5 +20,6 @@ export default function mapGenrator(rows, columns, tileSize, gap) {
             });
         }
     }
+
     return tiles;
 }
