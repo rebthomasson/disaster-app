@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, Button } from 'react-native';
-import React, { useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Player from "../entities/Player";
 import Path from "../entities/Path";
 import InventoryItem from "../entities/InventoryItem";
@@ -11,6 +11,7 @@ import QuizModal from "../screens/QuizModal";
 import {levels} from "../systems/levels";
 import LevelComplete from './LevelComplete';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import GoalModal from '../screens/GoalModal';
 
 //Configure tile size for the grid
 const tile_size = 70;
@@ -36,10 +37,31 @@ export default function GameBoard() {
 
     const [pathTiles, setPathTiles] = useState(currentLevel.pathTiles);
 
+    const [showGoal, setShowGoal] = useState(true);
+
+    const [score, setScore] = useState(0);
+    const [xp, setXP] = useState(0);
+
+    const [playerLevel, setPlayerLevel] = useState(1);
+
+    useEffect(() => {
+        const xpLeveling = playerLevel * 100;
+
+        if (xp >= xpLeveling) {
+            setPlayerLevel(prev => {
+                const newLevel = prev + 1;
+                alert(`You leveled up! You are now a level ${newLevel} player.`);
+                return newLevel;
+            });
+        }
+    }, [xp]);
+
     const totalTasks = pathTiles.filter(tile => tile.task).length;
 
     const maxX = Math.max(...pathTiles.map(t => t.x)) + tile_size;
     const maxY = Math.max(...pathTiles.map(t => t.y)) + tile_size;
+
+    const lastTile = pathTiles.length -1;
 
     
     function completeTask(taskId) {
@@ -47,8 +69,12 @@ export default function GameBoard() {
             const updated = [...completedTasks, taskId];
             setCompletedTasks(updated);
 
-            if (updated.length >= totalTasks) {
+            setScore(prev => prev + currentLevel.scoring.taskCompleted);
+            setXP(prev => prev + 25);
+
+            if (playerPosition === lastTile && completedTasks.length >= totalTasks) {
                 setShowLevelComplete(true);
+                setXP(prev => prev + 25);
             }
         }
     }
@@ -58,9 +84,10 @@ export default function GameBoard() {
 
         let newPosition = playerPosition;
         let triggered = false;
+        const lastTile = pathTiles.length - 1;
 
         // Check every tile between old and new position
-        for (let i = 1 + 1; i <= roll; i++) {
+        for (let i = 1; i <= roll; i++) {
             if (triggered) {
                 break;
             }
@@ -84,42 +111,54 @@ export default function GameBoard() {
                 continue;
 
             }
-            if (Math.random() < tile.eventChance) {
+            if (tile.eventType && Math.random() < tile.eventChance) {
                 triggerEvent(tile);
                 triggered = true;
-                continue;
+                break;
             }
         }
 
         setPlayerPosition(newPosition);
+
+        if (newPosition === lastTile && completedTasks.length >= totalTasks) {
+            setShowLevelComplete(true);
+            setScore(prev => prev + currentLevel.scoring.finishReached);
+        }
     }
 
     function triggerEvent(tile) {
-        alert(`Event triggered on tile ${tile.id} with terrain ${tile.terrain}`);
+        alert(tile.message);
+
+        setScore(prev => prev + currentLevel.scoring.eventTriggered);
+        setXP(prev => prev + 25);
+
+        if (tile.movementPenalty) {
+            setPlayerPosition(prev => Math.max(prev - tile.movementPenalty, 0));
+        }
     }
 
     //Handles what to do when a tile is pressed on screen
-    function handleTilePress(tile, index) {
-        //Get the row and column of the task
-        setPlayerPosition(index);
+    // function handleTilePress(tile, index) {
+    //     //Get the row and column of the task
+    //     setPlayerPosition(index);
         
         
-        //If it's a task tile, activates the task/shows it to the user
-        if (tile.task) {
-            setActiveTask(tile.task);
-            setTaskVisible(true);
-            return;
-        }
+    //     //If it's a task tile, activates the task/shows it to the user
+    //     if (tile.task) {
+    //         setActiveTask(tile.task);
+    //         setTaskVisible(true);
+    //         return;
+    //     }
 
-        if (tile.item) {
-            collectItem(tile.item, tile.id);
-            return;
-        }
+    //     if (tile.item) {
+    //         collectItem(tile.item, tile.id);
+    //         return;
+    //     }
 
-        if (Math.random() < tile.eventChance) {
-            triggerEvent(tile);
-        }
-    }
+    //     if (Math.random() < tile.eventChance) {
+    //         triggerEvent(tile);
+    //     }
+    // }
 
     //Controls what happens when moving to the next level
     function goToNextLevel() {
@@ -131,6 +170,8 @@ export default function GameBoard() {
             setPlayerPosition(0);
             setInventory([]);
             setPathTiles(levels[0].pathTiles);
+            setShowGoal(true);
+            setXP(0);
             return;
         }
         //Reset values and state
@@ -140,6 +181,8 @@ export default function GameBoard() {
         setPlayerPosition(0);
         setInventory([]);
         setPathTiles(levels[levelIndex + 1].pathTiles);
+        setShowGoal(true);
+        setXP(prev => prev + currentLevel.xpReward);
     }
 
     //When item is collected
@@ -155,6 +198,7 @@ export default function GameBoard() {
         setPathTiles(updatedTiles);
         
         setFoundItem(item);
+        setScore(prev => prev + currentLevel.scoring.itemCollected);
     }
 
     return (
@@ -173,6 +217,19 @@ export default function GameBoard() {
                 </View>
 
                 <Text style={styles.progressText}>{completedTasks.length} / {totalTasks} tasks completed </Text>
+                <Text style={styles.scoreText}>Score: {score} </Text>
+                <Text style={styles.xpText}>XP: {xp} </Text>
+                <Text style={{ fontSize: 18, textAlign: 'center' }}>
+                    Danger Level: {playerLevel}
+                </Text>
+                <View style={styles.progressBar}>
+                    <View
+                    style={[
+                        styles.progressFill,
+                        { width: `${(xp / (playerLevel * 100)) * 100}%` }
+                    ]}
+                    />
+                </View>
             </View>
             <View style={styles.boardContainer}>
                 <Svg
@@ -256,9 +313,17 @@ export default function GameBoard() {
                 onClose={() => setFoundItem(null)}
             />
 
+            <GoalModal
+                visible={showGoal}
+                level={currentLevel}
+                onClose={() => setShowGoal(false)}
+            />
+
             <LevelComplete
                 visible={showLevelComplete}
                 goToNextLevel={goToNextLevel}
+                levelScore={score}
+                xpGained={xp}
             />
         </SafeAreaView>
     );
@@ -295,6 +360,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 5
+  },
+  scoreText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#3D3D3D'
+  },
+  xpText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#3D3D3D'
   },
   progressFill: {
     height: "100%",
