@@ -1,8 +1,9 @@
 import { Modal, View, Text, Button } from 'react-native';
 
-export default function ItemModal({ item, onClose }) {
-    if (!item) return null;
-
+export default function GoalModal({ onClose, visible, level }) {
+    if (!visible || !level) {
+        return null;
+    }
     return (
         <Modal visible={true} transparent animationType='fade'>
             <View style={{
@@ -14,15 +15,16 @@ export default function ItemModal({ item, onClose }) {
                 <View style={{
                     backgroundColor: 'lightblue',
                     padding:20,
-                    borderRadius: 10
+                    borderRadius: 10,
+                    width: '80%'
                 }}>
                     <Text style={{fontSize:24, marginBottom:10, alignItems: 'center', fontWeight: 'bold'}}>
-                        {item.name}
+                        {level.name}
                     </Text>
                     <Text style={{fontSize:18, marginBottom:10, alignItems: 'center'}}>
-                        {item.info}
+                        {level.goal}
                     </Text>
-                    <Button title='Close' onPress={onClose} />
+                    <Button title='Start Level' onPress={onClose} />
                 </View>
             </View>
         </Modal>

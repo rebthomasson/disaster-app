@@ -52,28 +52,61 @@ const fireTasks = [
     }
 ]
 
-function randomizeEvents(tiles, items, tasks) {
-    const updated = [...tiles];
+function getRandomValidTileIndex(updatedTiles) {
+    const lastTile = updatedTiles.length - 1;
+
+    let index;
+    do {
+        index = Math.floor(Math.random() * updatedTiles.length);
+    } while (index === 0 || index === lastTile);
+
+    return index;
+}
+
+function randomizeEvents(tiles, rules, items, tasks) {
+    const updatedTiles = [...tiles];
+    const lastTile = updatedTiles.length - 1;
+
+    if (rules.terrainTypes) {
+        for (const [terrain, indices] of Object.entries(rules.terrainTypes)) {
+            indices.forEach(i => {
+                if (i != 0 && i != lastTile) {
+                    updatedTiles[i].terrain = terrain;
+
+                    if (rules.terrainEvents && rules.terrainEvents[terrain]) {
+                        const eventRule = rules.terrainEvents[terrain];
+                        updatedTiles[i].eventChance = eventRule.eventChance;
+                        updatedTiles[i].eventType = eventRule.eventType;
+                        updatedTiles[i].message = eventRule.message;
+                        updatedTiles[i].movementPenalty = eventRule.movementPenalty;
+                    }
+                }
+            })
+        }
+    }
+
+    updatedTiles[lastTile].terrain = "finish";
+    updatedTiles[lastTile].icon = "🏁";
 
     const quizTask = tasks.find(t => t.quiz);
     if (quizTask) {
-        updated[5] = {...updated[5], task: quizTask};
+        updatedTiles[5] = {...updatedTiles[5], task: quizTask};
     }
 
-    updated[3] = {...updated[3], item: items[0] };
+    updatedTiles[3] = {...updatedTiles[3], item: items[0] };
 
-    if (items.length > 1) {
-        const randomItemTile = Math.floor(Math.random() * updated.length);
-        updated[randomItemTile] = {...updated[randomItemTile], item: items[1]};
+    if (items.length > 1 ) {
+        const randomItemTile = getRandomValidTileIndex(updatedTiles);
+        updatedTiles[randomItemTile] = {...updatedTiles[randomItemTile], item: items[1]};
     }
 
     const nonQuizTasks = tasks.filter(t => !t.quiz);
     if (nonQuizTasks.length > 0) {
-        const randomTaskTile = Math.floor(Math.random() * updated.length);
-        updated[randomTaskTile] = {...updated[randomTaskTile], task: nonQuizTasks[0]};
+        const randomTaskTile = getRandomValidTileIndex(updatedTiles);
+        updatedTiles[randomTaskTile] = {...updatedTiles[randomTaskTile], task: nonQuizTasks[0]};
     }
 
-    return updated;
+    return updatedTiles;
 }
 
 //Creates the level structure for the game
@@ -86,6 +119,44 @@ export const levels = [
         requirementsToWin: 2, //Number of tasks that must be completed
         timeLimit: 60, // 60 seconds for the level
         pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 30), floodItems, floodTasks)
+        goal: "Complete 2 flood-prep tasks to escape the disaster!",
+        pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 30),
+        {
+            terrainTypes: {
+                water: [3, 4, 5],
+                mud: [7, 8],
+                debris: [10, 11]
+            },
+            terrainEvents: {
+                water: {
+                    eventChance: 0.4,
+                    eventType: 'slip',
+                    message: "You slipped in the flood water! You have to retrace your steps.",
+                    movementPenalty: 2,
+                },
+                mud: {
+                    eventChance: 0.5,
+                    eventType: 'slowdown',
+                    message: "You got stuck in the mud, and it slowed you down!",
+                    movementPenalty: 1
+                },
+                debris: {
+                    eventChance: 0.5,
+                    eventType: 'blockage',
+                    message: "Debris blocked your path, you have to clear it before moving forward.",
+                    movementPenalty: 0,
+                }
+            }
+        },
+        floodItems, 
+        floodTasks),
+        scoring: {
+            taskCompleted: 100,
+            itemCollected: 50,
+            eventTriggered: -50,
+            finishReached: 200
+        },
+        xpReward: 100,
     },
     {
         id: "wildfire",
@@ -93,5 +164,22 @@ export const levels = [
         requirementsToWin: 3,
         timeLimit: 120, // 120 seconds for the level
         pathTiles: randomizeEvents(mapGenerator(8, 10, 70, 20), fireItems, fireTasks)
+        goal: "Complete 3 fire-prep tasks to survive the heat!",
+        pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 20), 
+        {
+            terrainTypes: {
+                water: [3, 4, 5],
+                mud: [7, 8],
+                debris: [10, 11]
+            }
+        },
+        fireItems, fireTasks),
+        scoring: {
+            taskCompleted: 100,
+            itemCollected: 50,
+            eventTriggered: -50,
+            finishReached: 200
+        },
+        xpReward: 200,
     }
 ];

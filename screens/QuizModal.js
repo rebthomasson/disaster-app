@@ -1,4 +1,4 @@
-import { Modal, View, Text, Button, TouchableOpacity } from 'react-native';
+import { Modal, View, Text, TouchableOpacity } from 'react-native';
 import React, {useState, useEffect} from 'react';
 
 export default function QuizModal({ visible, quiz, onClose, onDone}) {
@@ -47,8 +47,15 @@ export default function QuizModal({ visible, quiz, onClose, onDone}) {
             setSelected(null);
 
             if (index === quiz.length - 1) {
-                onDone(passedQuiz && isRight);
-                onClose();
+                if(passedQuiz && isRight) {
+                    onDone(true);
+                    onClose();
+                } else {
+                    setIndex(0);
+                    setSelected(null);
+                    setFeedback(null);
+                    setPassedQuiz(true);
+                }
             } else {
                 setIndex(index + 1);
             }
