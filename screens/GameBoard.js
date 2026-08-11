@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, Button } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Button, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import Player from "../entities/Player";
 import Path from "../entities/Path";
 import InventoryItem from "../entities/InventoryItem";
@@ -11,14 +11,20 @@ import QuizModal from "../screens/QuizModal";
 import {levels} from "../systems/levels";
 import LevelComplete from './LevelComplete';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-//Configure tile size for the grid
-const tile_size = 70;
+import GameOver from '../screens/GameOver';
 
 export default function GameBoard() {
+    const { width, height } = useWindowDimensions();
+
+    //Configure tile size for the grid
+    const tile_size = 70;
+
     //Configuring state
     const [levelIndex, setLevelIndex] = useState(0);
     const currentLevel = levels[levelIndex];
+
+    const [timeLeft, setTimeLeft] = useState(currentLevel.timeLimit); 
+    const [timerActive, setTimerActive] = useState(true); 
 
     const [completedTasks, setCompletedTasks] = useState([]);
 
@@ -26,6 +32,7 @@ export default function GameBoard() {
     const [activeTask, setActiveTask] = useState(null);
     const [taskVisible, setTaskVisible] = useState(false);
     const [showLevelComplete, setShowLevelComplete] = useState(false);
+    const [showGameOver, setShowGameOver] = useState(false);
 
     const [inventory, setInventory] = useState([]);
 
@@ -41,7 +48,37 @@ export default function GameBoard() {
     const maxX = Math.max(...pathTiles.map(t => t.x)) + tile_size;
     const maxY = Math.max(...pathTiles.map(t => t.y)) + tile_size;
 
-    
+    useEffect(() => {
+        if (!timerActive) return;
+
+        const interval = setInterval(() => {
+            setTimeLeft(prevTime => {
+                if (prevTime <= 1) {
+                    clearInterval(interval);
+                    handleTimeUp();
+                    return 0;
+                }
+                return prevTime - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [timerActive]);
+
+    useEffect(() => {
+        if (taskVisible || quizVisible) {
+            setTimerActive(false);
+        } else {
+            setTimerActive(true);
+        }
+    }, [taskVisible, quizVisible]);
+
+
+    function handleTimeUp() {
+        setTimerActive(false);
+        setShowGameOver(true);
+    }
+
     function completeTask(taskId) {
         if (!completedTasks.includes(taskId)) {
             const updated = [...completedTasks, taskId];
@@ -124,13 +161,16 @@ export default function GameBoard() {
     //Controls what happens when moving to the next level
     function goToNextLevel() {
         //If it's the last level in the index, reset to level 1
-        if (levelIndex === levels.length - 1) {
+        if (levelIndex === levels.length - 1 || showGameOver) {
             setLevelIndex(0);
             setCompletedTasks([]);
             setShowLevelComplete(false);
             setPlayerPosition(0);
             setInventory([]);
             setPathTiles(levels[0].pathTiles);
+            setTimeLeft(levels[0].timeLimit);
+            setTimerActive(true);
+            setShowGameOver(false);
             return;
         }
         //Reset values and state
@@ -140,6 +180,8 @@ export default function GameBoard() {
         setPlayerPosition(0);
         setInventory([]);
         setPathTiles(levels[levelIndex + 1].pathTiles);
+        setTimeLeft(levels[levelIndex + 1].timeLimit);
+        setTimerActive(true);
     }
 
     //When item is collected
@@ -173,11 +215,13 @@ export default function GameBoard() {
                 </View>
 
                 <Text style={styles.progressText}>{completedTasks.length} / {totalTasks} tasks completed </Text>
+                <Text style={styles.progressText}>⏳ {timeLeft} seconds</Text>
             </View>
             <View style={styles.boardContainer}>
                 <Svg
-                    width={maxX}
-                    height={maxY}
+                    width={width}
+                    height={height * 0.5}  // Adjust height as needed
+                    viewBox={`0 0 ${maxX} ${maxY}`}
                     pointerEvents='box-none'
                 >
                     <Rect
@@ -260,6 +304,11 @@ export default function GameBoard() {
                 visible={showLevelComplete}
                 goToNextLevel={goToNextLevel}
             />
+
+            <GameOver
+                visible={showGameOver}
+                startOver={goToNextLevel}
+            />
         </SafeAreaView>
     );
 }
@@ -273,6 +322,7 @@ const styles = StyleSheet.create({
   },
   header: {
     width: '100%',
+    height: '20%',
     paddingTop: 40,
     paddingBottom: 20,
     alignItems: 'center',

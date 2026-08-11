@@ -84,12 +84,14 @@ export const levels = [
         id: "flood",
         name: "Level 1 - Don't Get Swept Away!",
         requirementsToWin: 2, //Number of tasks that must be completed
+        timeLimit: 60, // 60 seconds for the level
         pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 30), floodItems, floodTasks)
     },
     {
         id: "wildfire",
         name: "Level 2 - Stay Outta the Heat!",
         requirementsToWin: 3,
-        pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 20), fireItems, fireTasks)
+        timeLimit: 120, // 120 seconds for the level
+        pathTiles: randomizeEvents(mapGenerator(8, 10, 70, 20), fireItems, fireTasks)
     }
 ];
