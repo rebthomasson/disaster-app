@@ -116,9 +116,11 @@ export const levels = [
         //by indexing it
         id: "flood",
         name: "Level 1 - Don't Get Swept Away!",
+        background: require('../assets/flood-background.jpg'),
+        tintColor: 'rgba(0, 50, 100, 0.4)',
+        overlay: require('../assets/rain.png'),
         requirementsToWin: 2, //Number of tasks that must be completed
         timeLimit: 60, // 60 seconds for the level
-        pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 30), floodItems, floodTasks)
         goal: "Complete 2 flood-prep tasks to escape the disaster!",
         pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 30),
         {
@@ -161,11 +163,13 @@ export const levels = [
     {
         id: "wildfire",
         name: "Level 2 - Stay Outta the Heat!",
+        background: require('../assets/wildfire-background.jpg'),
+        tintColor: 'rgba(150, 50, 0, 0.4)',
+        overlay: require('../assets/embers.png'),
         requirementsToWin: 3,
-        timeLimit: 120, // 120 seconds for the level
-        pathTiles: randomizeEvents(mapGenerator(8, 10, 70, 20), fireItems, fireTasks)
+        timeLimit: 120, // 120 seconds for the level,
         goal: "Complete 3 fire-prep tasks to survive the heat!",
-        pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 20), 
+        pathTiles: randomizeEvents(mapGenerator(8, 10, 70, 20), 
         {
             terrainTypes: {
                 water: [3, 4, 5],

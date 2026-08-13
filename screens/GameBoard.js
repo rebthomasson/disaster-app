@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, Button, useWindowDimensions } from 'react-native';
-import React, { use, useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, Button, useWindowDimensions, ImageBackground, Animated, Image } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
 import Player from "../entities/Player";
 import Path from "../entities/Path";
 import InventoryItem from "../entities/InventoryItem";
@@ -26,6 +26,13 @@ export default function GameBoard() {
     //Configuring state
     const [levelIndex, setLevelIndex] = useState(0);
     const currentLevel = levels[levelIndex];
+    if (!currentLevel || !currentLevel.background || !currentLevel.tintColor) {
+        return (
+            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>Loading level...</Text>
+            </SafeAreaView>
+        );
+    }
 
     const [timeLeft, setTimeLeft] = useState(currentLevel.timeLimit); 
     const [timerActive, setTimerActive] = useState(true); 
@@ -47,12 +54,43 @@ export default function GameBoard() {
 
     const [pathTiles, setPathTiles] = useState(currentLevel.pathTiles);
 
+    if (!pathTiles || pathTiles.length === 0) {
+        return (
+            <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <Text>Loading map...</Text>
+            </SafeAreaView>
+        );
+    }
+
+
     const [showGoal, setShowGoal] = useState(true);
 
     const [score, setScore] = useState(0);
     const [xp, setXP] = useState(0);
 
     const [playerLevel, setPlayerLevel] = useState(1);
+
+    const rainOpacity = useRef(new Animated.Value(0.3)).current;
+
+    useEffect(() => {
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(rainOpacity, {
+                    toValue: 0.7,
+                    duration: 1000,
+                    useNativeDriver: true
+                }),
+                Animated.timing(rainOpacity, {
+                    toValue: 0.3,
+                    duration: 1000,
+                    useNativeDriver: true
+                })
+            ])
+        ).start();
+    }, []);
+
+    const [diceRoll, setDiceRoll] = useState(1);
+    const [isRolling, setIsRolling] = useState(false);
 
     useEffect(() => {
         const xpLeveling = playerLevel * 100;
@@ -89,12 +127,12 @@ export default function GameBoard() {
     }, [timerActive]);
 
     useEffect(() => {
-        if (taskVisible || quizVisible) {
+        if (taskVisible || quizVisible || showGoal) {
             setTimerActive(false);
         } else {
             setTimerActive(true);
         }
-    }, [taskVisible, quizVisible]);
+    }, [taskVisible, quizVisible, showGoal]);
 
 
     function handleTimeUp() {
@@ -120,11 +158,31 @@ export default function GameBoard() {
         }
     }
 
-    function rollDice() {
-        const roll = Math.floor(Math.random() * 6) + 1;
+    function animateDiceRoll() {
+        if (isRolling) return;
+        setIsRolling(true);
+        
+        let numberShuffle = setInterval(() => {
+            setDiceRoll(Math.floor(Math.random() * 6) + 1);
+        }, 100);
 
+        setTimeout(() => {
+            clearInterval(numberShuffle);
+
+            const finalRoll = Math.floor(Math.random() * 6) + 1;
+
+            const actualTilesMoved = rollDice(finalRoll);
+
+            setDiceRoll(actualTilesMoved);
+            
+            setIsRolling(false);
+        }, 1000);
+    }
+
+    function rollDice(roll) {
         let newPosition = playerPosition;
         let triggered = false;
+        let tilesMoved = 0;
         const lastTile = pathTiles.length - 1;
 
         // Check every tile between old and new position
@@ -139,6 +197,7 @@ export default function GameBoard() {
             const tile = pathTiles[nextIndex];
 
             newPosition = nextIndex;
+            tilesMoved++;
 
             if (tile.task) {
                 setActiveTask(tile.task);
@@ -165,6 +224,8 @@ export default function GameBoard() {
             setShowLevelComplete(true);
             setScore(prev => prev + currentLevel.scoring.finishReached);
         }
+
+        return tilesMoved;
     }
 
     function triggerEvent(tile) {
@@ -177,29 +238,6 @@ export default function GameBoard() {
             setPlayerPosition(prev => Math.max(prev - tile.movementPenalty, 0));
         }
     }
-
-    //Handles what to do when a tile is pressed on screen
-    // function handleTilePress(tile, index) {
-    //     //Get the row and column of the task
-    //     setPlayerPosition(index);
-        
-        
-    //     //If it's a task tile, activates the task/shows it to the user
-    //     if (tile.task) {
-    //         setActiveTask(tile.task);
-    //         setTaskVisible(true);
-    //         return;
-    //     }
-
-    //     if (tile.item) {
-    //         collectItem(tile.item, tile.id);
-    //         return;
-    //     }
-
-    //     if (Math.random() < tile.eventChance) {
-    //         triggerEvent(tile);
-    //     }
-    // }
 
     //Controls what happens when moving to the next level
     function goToNextLevel() {
@@ -248,136 +286,153 @@ export default function GameBoard() {
     }
 
     return (
-        /*Wraps everything in a SafeAreaView to render app content within device boundaries */
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-            <View style={styles.header}>
-                <Text style={styles.headerText}>{currentLevel.name}</Text>
+        <SafeAreaView style={{ flex: 1 }}>
+            <ImageBackground source={currentLevel.background} style={{ flex: 1 }} resizeMode="cover">
+                <Animated.View style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    opacity: rainOpacity,
+                    pointerEvents: 'none',
+                }}>
+                    <Image
+                        source={currentLevel.overlay}
+                        style={{ width: '100%', height: '100%' }}
+                    />
+                </Animated.View>
+                <View style={styles.header}>
+                    <Text style={styles.headerText}>{currentLevel.name}</Text>
 
-                <View style={styles.progressBar}>
-                    <View
-                    style={[
-                        styles.progressFill,
-                        { width: `${(completedTasks.length / totalTasks) * 100}%` }
-                    ]}
-                    />
-                </View>
-
-                <Text style={styles.progressText}>{completedTasks.length} / {totalTasks} tasks completed </Text>
-                <Text style={styles.progressText}>⏳ {timeLeft} seconds</Text>
-                <Text style={styles.scoreText}>Score: {score} </Text>
-                <Text style={styles.xpText}>XP: {xp} </Text>
-                <Text style={{ fontSize: 18, textAlign: 'center' }}>
-                    Danger Level: {playerLevel}
-                </Text>
-                <View style={styles.progressBar}>
-                    <View
-                    style={[
-                        styles.progressFill,
-                        { width: `${(xp / (playerLevel * 100)) * 100}%` }
-                    ]}
-                    />
-                </View>
-            </View>
-            <View style={styles.boardContainer}>
-                <Svg
-                    width={width}
-                    height={height * 0.5}  // Adjust height as needed
-                    viewBox={`0 0 ${maxX} ${maxY}`}
-                    pointerEvents='box-none'
-                >
-                    <Rect
-                        x={0}
-                        y={0}
-                        width={maxX}
-                        height={maxY}
-                        fill="#cce5cc"   // light green for grass
-                    />
-                    <Path
-                        tile_size = {tile_size}
-                        pathTiles={pathTiles}
-                        playerPosition={playerPosition}
-                        //onTilePress={handleTilePress}
-                    />
-                    <Player
-                        x = {pathTiles[playerPosition].x}
-                        y = {pathTiles[playerPosition].y}
-                        tile_size={tile_size}
-                    />
-                    {pathTiles.map(tile => (
-                        tile.item && <InventoryItem
-                            key={tile.item.id}
-                            x={tile.x}
-                            y={tile.y}
-                            tile_size={tile_size}
-                            onPress = {() => collectItem(tile.item, tile.id)}
+                    <View style={styles.progressBar}>
+                        <View
+                        style={[
+                            styles.progressFill,
+                            { width: `${(completedTasks.length / totalTasks) * 100}%` }
+                        ]}
                         />
-                    ))}
-                </Svg>
-                <Text style={styles.inventoryHeaderText}>Inventory</Text>
-                <View style={styles.inventorySection}>
-                    {inventory.map(item => (
-                        <View key={item.id} style={styles.inventorySlot}>
-                            <Text style={styles.inventoryText}>{item.name}</Text>
-                        </View>
-                    ))}
+                    </View>
+
+                    <Text style={styles.progressText}>{completedTasks.length} / {totalTasks} tasks completed </Text>
+                    <Text style={styles.progressText}>⏳ {timeLeft} seconds</Text>
+                    <Text style={styles.scoreText}>Score: {score} </Text>
+                    <Text style={styles.xpText}>XP: {xp} </Text>
+                    <Text style={{ fontSize: 18, textAlign: 'center' }}>
+                        Danger Level: {playerLevel}
+                    </Text>
+                    <View style={styles.progressBar}>
+                        <View
+                        style={[
+                            styles.progressFill,
+                            { width: `${(xp / (playerLevel * 100)) * 100}%` }
+                        ]}
+                        />
+                    </View>
                 </View>
-            </View>    
+                <View style={styles.boardContainer}>
+                    <Svg
+                        width={width}
+                        height={height * 0.5}  // Adjust height as needed
+                        viewBox={`0 0 ${maxX} ${maxY}`}
+                        pointerEvents='box-none'
+                    >
+                        <Rect
+                            x={0}
+                            y={0}
+                            width={maxX}
+                            height={maxY}
+                            fill={currentLevel.tintColor}
+                        />
+                        <Path
+                            tile_size = {tile_size}
+                            pathTiles={pathTiles}
+                            playerPosition={playerPosition}
+                            //onTilePress={handleTilePress}
+                        />
+                        <Player
+                            x = {pathTiles[playerPosition].x}
+                            y = {pathTiles[playerPosition].y}
+                            tile_size={tile_size}
+                        />
+                        {pathTiles.map(tile => (
+                            tile.item && <InventoryItem
+                                key={tile.item.id}
+                                x={tile.x}
+                                y={tile.y}
+                                tile_size={tile_size}
+                                onPress = {() => collectItem(tile.item, tile.id)}
+                            />
+                        ))}
+                    </Svg>
+                    <Text style={styles.inventoryHeaderText}>Inventory</Text>
+                    <View style={styles.inventorySection}>
+                        {inventory.map(item => (
+                            <View key={item.id} style={styles.inventorySlot}>
+                                <Text style={styles.inventoryText}>{item.name}</Text>
+                            </View>
+                        ))}
+                    </View>
+                </View>    
+                <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                    <Text style={{ fontSize: 40, fontWeight: "bold" }}>🎲 {diceRoll} </Text>
+                    {isRolling && 
+                        <Text style={{ fontSize: 20, color: 'gray' }}> 
+                            Rolling...
+                        </Text>}
+                    <Button title="🎲 Roll" onPress={animateDiceRoll} disabled={isRolling} />
+                </View>
+                <TaskModal
+                    visible={taskVisible}
+                    task={activeTask}
+                    onClose={() => {
+                        setTaskVisible(false);
+                        if (!activeTask.quiz) {
+                            completeTask(activeTask.id)
+                        }
+                    }}
+                    onStartQuiz={(quiz) => {
+                        setActiveQuiz(quiz);
+                        setQuizVisible(true);
+                    }}
+                />
 
-            <View style={{ marginTop: 20 }}>
-                <Text style={{ fontSize: 18, fontWeight: "bold" }}>Roll the Dice</Text>
-                <Button title="🎲 Roll" onPress={rollDice} />
-            </View>
+                <QuizModal
+                    visible={quizVisible}
+                    quiz={activeQuiz}
+                    onClose={() => {
+                        setQuizVisible(false);
+                    }}
+                    onDone={(passed) => {
+                        if (passed) {
+                            completeTask(activeTask.id);
+                        }
+                    }}
+                />
 
-            <TaskModal
-                visible={taskVisible}
-                task={activeTask}
-                onClose={() => {
-                    setTaskVisible(false);
-                    if (!activeTask.quiz) {
-                        completeTask(activeTask.id)
-                    }
-                }}
-                onStartQuiz={(quiz) => {
-                    setActiveQuiz(quiz);
-                    setQuizVisible(true);
-                }}
-            />
+                <ItemModal
+                    item={foundItem}
+                    onClose={() => setFoundItem(null)}
+                />
 
-            <QuizModal
-                visible={quizVisible}
-                quiz={activeQuiz}
-                onClose={() => {
-                    setQuizVisible(false);
-                }}
-                onDone={(passed) => {
-                    if (passed) {
-                        completeTask(activeTask.id);
-                    }
-                }}
-            />
+                <GoalModal
+                    visible={showGoal}
+                    level={currentLevel}
+                    onClose={() => setShowGoal(false)}
+                />
 
-            <ItemModal
-                item={foundItem}
-                onClose={() => setFoundItem(null)}
-            />
+                <LevelComplete
+                    visible={showLevelComplete}
+                    goToNextLevel={goToNextLevel}
+                    levelScore={score}
+                    xpGained={xp}
+                />
 
-            <GoalModal
-                visible={showGoal}
-                level={currentLevel}
-                onClose={() => setShowGoal(false)}
-            />
-
-            <LevelComplete
-                visible={showLevelComplete}
-                goToNextLevel={goToNextLevel}
-                levelScore={score}
-                xpGained={xp}
-            />
-
-            <GameOver
-                visible={showGameOver}
-                startOver={goToNextLevel}
-            />
+                <GameOver
+                    visible={showGameOver}
+                    startOver={goToNextLevel}
+                />
+            </ImageBackground>
         </SafeAreaView>
     );
 }
@@ -385,7 +440,6 @@ export default function GameBoard() {
 const styles = StyleSheet.create({
   boardContainer: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -395,7 +449,8 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 20,
     alignItems: 'center',
-    backgroundColor: '#ADC4DB'
+    backgroundColor: '#ADC4DB',
+    opacity: 0.8
   },
   headerText: {
     fontSize: 20,
@@ -464,7 +519,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 10,
     textAlign: 'center',
-    backgroundColor: '#ADC4DB',
-
+    backgroundColor: '#ADC4DB'
   }
 });
