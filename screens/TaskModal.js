@@ -18,7 +18,9 @@ export default function TaskModal({ visible, task, onClose, onStartQuiz}) {
                             />
                         </View>
                     )}
-                    <Button title='Close' onPress={onClose} />
+                    {!task.quiz && (
+                        <Button title='Close' onPress={onClose} />
+                    )}
                 </View>
             </View>
         </Modal>
