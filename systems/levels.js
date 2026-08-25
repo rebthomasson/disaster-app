@@ -122,13 +122,13 @@ export const levels = [
         requirementsToWin: 2, //Number of tasks that must be completed
         timeLimit: 60, // 60 seconds for the level
         goal: "Complete 2 flood-prep tasks to escape the disaster!",
-        pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 30),
+        pathTiles: randomizeEvents(mapGenerator(5, 5, 70, 30), 
         {
             terrainTypes: {
                 water: [3, 4, 5],
                 mud: [7, 8],
                 debris: [10, 11]
-            },
+            },   
             terrainEvents: {
                 water: {
                     eventChance: 0.4,
@@ -169,12 +169,32 @@ export const levels = [
         requirementsToWin: 3,
         timeLimit: 120, // 120 seconds for the level,
         goal: "Complete 3 fire-prep tasks to survive the heat!",
-        pathTiles: randomizeEvents(mapGenerator(8, 10, 70, 20), 
+        pathTiles: randomizeEvents(mapGenerator(8, 10, 70, 20, ['fire', 'smoke', 'debris']), 
         {
             terrainTypes: {
-                water: [3, 4, 5],
-                mud: [7, 8],
-                debris: [10, 11]
+                fire: [5, 9, 13, 17],
+                smoke: [7, 8, 10, 20, 21, 22],
+                debris: [2, 6, 15, 18]
+            },
+            terrainEvents: {
+                fire: {
+                    eventChance: 0.6,
+                    eventType: 'burn',
+                    message: "You were hurt by the fire! You have to find a way to put it out.",
+                    movementPenalty: 2,
+                },
+                smoke: {
+                    eventChance: 0.7,
+                    eventType: 'slowdown',
+                    message: "You got caught in the smoke, and had to wait for it to clear!",
+                    movementPenalty: 3
+                },
+                debris: {
+                    eventChance: 0.6,
+                    eventType: 'blockage',
+                    message: "Debris blocked your path, you have to clear it before moving forward.",
+                    movementPenalty: 1,
+                }
             }
         },
         fireItems, fireTasks),

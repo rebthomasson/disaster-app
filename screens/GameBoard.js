@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, Button, useWindowDimensions, ImageBackground, Animated, Image } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import Player from "../entities/Player";
-import Path from "../entities/Path";
+import TilePath from "../entities/Path";
 import InventoryItem from "../entities/InventoryItem";
 import {Svg, Rect} from 'react-native-svg';
 import TaskModal from "../screens/TaskModal"; 
@@ -70,6 +70,18 @@ export default function GameBoard() {
 
     const [playerLevel, setPlayerLevel] = useState(1);
 
+    const [alertMessage, setAlertMessage] = useState(null);
+
+    useEffect(() => {
+        if (alertMessage) {
+            const timer = setTimeout(() => {
+                setAlertMessage(null);
+            }, 3000); // Alert will disappear after 3 seconds
+
+            return () => clearTimeout(timer);
+        }
+    }, [alertMessage]);
+
     const rainOpacity = useRef(new Animated.Value(0.3)).current;
 
     useEffect(() => {
@@ -98,7 +110,7 @@ export default function GameBoard() {
         if (xp >= xpLeveling) {
             setPlayerLevel(prev => {
                 const newLevel = prev + 1;
-                alert(`You leveled up! You are now a level ${newLevel} player.`);
+                setAlertMessage(`You leveled up! You are now a level ${newLevel} player.`);
                 return newLevel;
             });
         }
@@ -229,7 +241,7 @@ export default function GameBoard() {
     }
 
     function triggerEvent(tile) {
-        alert(tile.message);
+        setAlertMessage(tile.message);
 
         setScore(prev => prev + currentLevel.scoring.eventTriggered);
         setXP(prev => prev + 25);
@@ -287,6 +299,12 @@ export default function GameBoard() {
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
+            {alertMessage && (
+                <View style={styles.alertContainer}>
+                    <Text style={styles.alertText}>⚠️ Alert </Text>
+                    <Text style={styles.alertText}>{alertMessage}</Text>
+                </View>
+            )}
             <ImageBackground source={currentLevel.background} style={{ flex: 1 }} resizeMode="cover">
                 <Animated.View style={{
                     position: 'absolute',
@@ -304,7 +322,6 @@ export default function GameBoard() {
                 </Animated.View>
                 <View style={styles.header}>
                     <Text style={styles.headerText}>{currentLevel.name}</Text>
-
                     <View style={styles.progressBar}>
                         <View
                         style={[
@@ -315,27 +332,20 @@ export default function GameBoard() {
                     </View>
 
                     <Text style={styles.progressText}>{completedTasks.length} / {totalTasks} tasks completed </Text>
-                    <Text style={styles.progressText}>⏳ {timeLeft} seconds</Text>
-                    <Text style={styles.scoreText}>Score: {score} </Text>
-                    <Text style={styles.xpText}>XP: {xp} </Text>
-                    <Text style={{ fontSize: 18, textAlign: 'center' }}>
-                        Danger Level: {playerLevel}
-                    </Text>
-                    <View style={styles.progressBar}>
-                        <View
-                        style={[
-                            styles.progressFill,
-                            { width: `${(xp / (playerLevel * 100)) * 100}%` }
-                        ]}
-                        />
-                    </View>
+                </View>
+                <View style={styles.header}>
+                    <Text style={styles.headerItem}>⏳ {timeLeft} seconds</Text>
+                    <Text style={styles.headerItem}>Score: {score} </Text>
+                    <Text style={styles.headerItem}>XP: {xp} </Text>
+                    <Text style={styles.headerItem}>Danger Level: {playerLevel}</Text>
                 </View>
                 <View style={styles.boardContainer}>
                     <Svg
                         width={width}
-                        height={height * 0.5}  // Adjust height as needed
+                        height={height * 0.48}  // Adjust height as needed
                         viewBox={`0 0 ${maxX} ${maxY}`}
                         pointerEvents='box-none'
+                        style={{position: 'relative'}}
                     >
                         <Rect
                             x={0}
@@ -344,7 +354,7 @@ export default function GameBoard() {
                             height={maxY}
                             fill={currentLevel.tintColor}
                         />
-                        <Path
+                        <TilePath
                             tile_size = {tile_size}
                             pathTiles={pathTiles}
                             playerPosition={playerPosition}
@@ -374,10 +384,10 @@ export default function GameBoard() {
                         ))}
                     </View>
                 </View>    
-                <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                <View style={styles.diceContainer}>
                     <Text style={{ fontSize: 40, fontWeight: "bold" }}>🎲 {diceRoll} </Text>
                     {isRolling && 
-                        <Text style={{ fontSize: 20, color: 'gray' }}> 
+                        <Text style={{ fontSize: 20, color: 'gray', marginTop: 4 }}> 
                             Rolling...
                         </Text>}
                     <Button title="🎲 Roll" onPress={animateDiceRoll} disabled={isRolling} />
@@ -444,28 +454,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   header: {
-    width: '100%',
-    height: '20%',
-    paddingTop: 40,
-    paddingBottom: 20,
-    alignItems: 'center',
-    backgroundColor: '#ADC4DB',
-    opacity: 0.8
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  headerItem: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#3D3D3D',
   },
   headerText: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10
+    marginBottom: 10,
+    alignText: 'center',
   },
   progressText: {
-    marginTop: 8,
     fontSize: 12,
     color: '#3D3D3D'
   },
   progressBar: {
-    width: "80%",
+    width: "100%",
     height: 15,
     backgroundColor: "#ddd",
+    marginTop: 2,
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 5
@@ -520,5 +537,42 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
     backgroundColor: '#ADC4DB'
-  }
+  },
+  diceContainer: {
+    alignItems: 'center',
+    marginVertical: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    padding: 10,
+    borderRadius: 10,
+    marginHorizontal: 20,
+    width: '90%',
+    borderWidth: 1,
+    borderColor: '#B8C4CE',
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  alertContainer: {
+    position: 'absolute',
+    top: '30%',
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 255, 0, 0.9)',
+    padding: 10,
+    borderRadius: 10,
+    zIndex: 1000,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  alertText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
