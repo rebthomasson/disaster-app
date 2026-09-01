@@ -1,15 +1,19 @@
-import { Circle } from "react-native-svg";
+import { Text } from "react-native-svg";
 import React from "react";
 
-export default function InventoryItem({ x, y, tile_size, onPress }) {
+export default function InventoryItem({ x, y, tile_size, icon, onPress }) {
 
     return (
-        <Circle
-            cx={x + tile_size/2}
-            cy={y + tile_size/2}
-            r={tile_size * 0.25}
-            fill="#A98EBF"
-            onPressIn={onPress}
-        />
+        <Text
+            x={x + tile_size * 0.8}
+            y={y + tile_size * 0.8}
+            fontSize={tile_size * 0.25}
+            fill="white"
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            onPress={onPress}
+        >
+            {icon}
+        </Text>
     );
 }

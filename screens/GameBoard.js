@@ -342,7 +342,7 @@ export default function GameBoard() {
                 <View style={styles.boardContainer}>
                     <Svg
                         width={width}
-                        height={height * 0.48}  // Adjust height as needed
+                        height={height * 48}  // Adjust height as needed
                         viewBox={`0 0 ${maxX} ${maxY}`}
                         pointerEvents='box-none'
                         style={{position: 'relative'}}
@@ -371,6 +371,7 @@ export default function GameBoard() {
                                 x={tile.x}
                                 y={tile.y}
                                 tile_size={tile_size}
+                                icon={tile.item.icon}
                                 onPress = {() => collectItem(tile.item, tile.id)}
                             />
                         ))}
@@ -379,7 +380,7 @@ export default function GameBoard() {
                     <View style={styles.inventorySection}>
                         {inventory.map(item => (
                             <View key={item.id} style={styles.inventorySlot}>
-                                <Text style={styles.inventoryText}>{item.name}</Text>
+                                <Text style={styles.inventoryText}>{item.icon} {item.name}</Text>
                             </View>
                         ))}
                     </View>
