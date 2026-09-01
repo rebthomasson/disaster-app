@@ -1,42 +1,39 @@
 import {Rect, G, Line, Text, Path} from 'react-native-svg';
 import React from 'react';
-//import Player from '../entities/Player';
 
-// const terrainStyles = {
-//     "mud": {
-//         fill: "#8B4513",
-//         texture: require('../assets/mud.jpg'),
-//     },
-//     "debris": {
-//         fill: "#A9A9A9",
-//         texture: require('../assets/debris.jpg'),
-//     },
-//     "water": {
-//         fill: "#6285ac",
-//         texture: require('../assets/water.jpg'),
-//     },
-//     "fire": {
-//         fill: "#FF4500",
-//         texture: require('../assets/fire.jpg'),
-//     },
-//     "smoke": {
-//         fill: "#808080",
-//         texture: require('../assets/smoke.jpg'),
-//     },
-//     "finish": {
-//         fill: "#FFD700",
-//     },
-//     "default": {
-//         fill: "#629f42",
-//         texture: require('../assets/grass.jpg'),
-//     }
-// };
+const terrainStyles = {
+    "mud": {
+        fill: "#795548",
+        icon: '🟫',
+    },
+    "debris": {
+        fill: "#9E9E9E",
+        icon: '🪨',
+    },
+    "water": {
+        fill: "#42A5F5",
+        icon: '🌊',
+    },
+    "fire": {
+        fill: "#EF5350",
+        icon: '🔥',
+    },
+    "smoke": {
+        fill: "#90A4AE",
+        icon: '💨',
+    },
+    "finish": {
+        fill: "#FFD54F",
+    },
+    "default": {
+        fill: "#66BB6A",
+    }
+};
 
 export default function TilePath({
     tile_size,
     pathTiles,
-    playerPosition,
-    onTilePress
+    playerPosition
 }) {
     return (
     <>
@@ -49,14 +46,14 @@ export default function TilePath({
 
             if (prev.y === tile.y) {
                 // Horizontal line
-                px = prev.x + tile.x ? prev.x + tile_size : prev.x;
+                px = tile.x > prev.x ? prev.x + tile_size : prev.x;
                 py = prev.y + tile_size / 2;
                 cx = tile.x < prev.x ? tile.x + tile_size : tile.x;
                 cy = tile.y + tile_size / 2;
             } else if (prev.x === tile.x) {
                 // Vertical line
                 px = prev.x + tile_size / 2;
-                py = prev.y + tile.y ? prev.y + tile_size : prev.y;
+                py = tile.y > prev.y ? prev.y + tile_size : prev.y;
                 cx = tile.x + tile_size / 2;
                 cy = tile.y < prev.y ? tile.y + tile_size : tile.y;
             } else {
@@ -78,9 +75,11 @@ export default function TilePath({
             // Curve strength (tweak this!)
             const curve = 20;
 
+            const distance = Math.max(Math.sqrt(dx*dx + dy*dy), 1); // Prevent division by zero
+
             // Control point: perpendicular to the line
-            const qx = mx - dy * (curve / Math.sqrt(dx*dx + dy*dy));
-            const qy = my + dx * (curve / Math.sqrt(dx*dx + dy*dy));
+            const qx = mx - dy * (curve / distance);
+            const qy = my + dx * (curve / distance);
 
             return (
                 <Path
@@ -93,8 +92,9 @@ export default function TilePath({
             );
         })}
         {pathTiles.map((tile, index) => {
-            //const style = terrainStyles[tile.terrain] || terrainStyles["default"];
+            const style = terrainStyles[tile.terrain] || terrainStyles["default"];
             const isPlayerTile = index === playerPosition;
+            const tileIcon = tile.icon || style.icon || null;
 
             return (
                 <G
@@ -105,36 +105,11 @@ export default function TilePath({
                     y={tile.y}
                     width={tile_size}
                     height={tile_size}
-                    stroke="black"
+                    stroke={isPlayerTile ? "#FFD700" : "black"}
                     strokeWidth="2"
-                    fill="white"
+                    fill={style.fill}
                     />
-                    {/* {style.texture && (
-                        <RNImage
-                            source={style.texture}
-                            style={{
-                                position: 'absolute',
-                                left: tile.x,
-                                top: tile.y,
-                                width: tile_size,
-                                height: tile_size,
-                                opacity: 0.5,
-                                pointerEvents: 'none', // Ensure the image doesn't block touch events
-                            }}
-                        />
-                    )}
-                    {style.texture && (
-                        <SvgImage
-                            x={tile.x}
-                            y={tile.y}
-                            width={tile_size}
-                            height={tile_size}
-                            opacity={0.5}
-                            source={style.texture}
-                            preserveAspectRatio="none"
-                        />
-                    )} */}
-                    {tile.icon && (
+                    {tileIcon && (
                         <Text
                             x={tile.x + tile_size/2}
                             y={tile.y + tile_size/2}
@@ -143,7 +118,7 @@ export default function TilePath({
                             textAnchor="middle"
                             alignmentBaseline="middle"
                         >
-                            {tile.icon}
+                            {tileIcon}
                         </Text>
                     )}
                 </G>

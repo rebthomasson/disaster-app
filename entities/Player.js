@@ -1,26 +1,15 @@
-//import { Image as RNImage } from "react-native";
-import {Circle} from 'react-native-svg';
+import {Image as SvgImage} from 'react-native-svg';
 import React from "react";
-//import playerSprite from '../assets/player.png';
 
 export default function Player({ x, y, tile_size }) {
+    const playerSize = tile_size * 0.8; // Adjust the size of the player image relative to the tile size
     return (
-        <Circle
-            cx={x + tile_size / 2}
-            cy={y + tile_size / 2}
-            r={tile_size * 0.3}
-            fill="pink"
+        <SvgImage
+            x={x + (tile_size - playerSize) / 2}
+            y={y + (tile_size - playerSize) / 2}
+            width={playerSize}
+            height={playerSize}
+            href={require('../assets/player.png')} // Path to the player image
         />
-        // <RNImage
-        //     source={playerSprite}
-        //     style={{
-        //         position: 'absolute',
-        //         left: x + tile_size * 0.1,
-        //         top: y + tile_size * 0.1,
-        //         width: tile_size * 0.8,
-        //         height: tile_size * 0.8,
-        //         pointerEvents: 'none',
-        //     }}
-        // />
     );
 }

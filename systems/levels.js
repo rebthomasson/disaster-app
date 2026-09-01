@@ -1,13 +1,13 @@
 import mapGenerator from "./mapGenerator";
 
 const floodItems = [
-    { id: "item1", name: "Flashlight", info: "Vital if flood takes down power lines." },
-    { id: "item2", name: "Water", info: "A minimum 3-day supply of water is recommended." },
+    { id: "item1", name: "Flashlight", icon: "🔦", info: "Vital if flood takes down power lines." },
+    { id: "item2", name: "Water", icon: "💧", info: "A minimum 3-day supply of water is recommended." },
 ];
 
 const fireItems = [
-    { id: "item1", name: "Map", info: "Mark evacuation routes on a physical map." },
-    { id: "item2", name: "Compass", info: "Helps avoid getting lost." },
+    { id: "item1", name: "Map", icon: "🗺️", info: "Mark evacuation routes on a physical map." },
+    { id: "item2", name: "Compass", icon: "🧭", info: "Helps avoid getting lost." },
 ];
 
 const floodTasks = [
@@ -169,7 +169,7 @@ export const levels = [
         requirementsToWin: 3,
         timeLimit: 120, // 120 seconds for the level,
         goal: "Complete 3 fire-prep tasks to survive the heat!",
-        pathTiles: randomizeEvents(mapGenerator(8, 10, 70, 20, ['fire', 'smoke', 'debris']), 
+        pathTiles: randomizeEvents(mapGenerator(6, 8, 70, 20, ['fire', 'smoke', 'debris']),
         {
             terrainTypes: {
                 fire: [5, 9, 13, 17],
