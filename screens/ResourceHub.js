@@ -1,7 +1,8 @@
-import React from 'react';
-import {ScrollView, StyleSheet} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {ScrollView, StyleSheet, View} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {Card, Text, Avatar, Button} from 'react-native-paper';
+import * as Location from 'expo-location';
 
 const resources = [
   {
@@ -18,6 +19,70 @@ const resources = [
 
 export default function ResourceHub({navigation}) {
 
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+    (async() => {
+      let {status} = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission denied');
+        return;
+      }
+
+      let loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc);
+    })();
+  }, []);
+
+  async function getNWSZone(lat, lon) {
+    const response = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
+      headers: {
+        "User-Agent": "DisasterPrepApp (disaster@example.com)",
+        "Accept": "application/ld+json"
+      }
+    });
+
+    const data = await response.json();
+    return data.properties.forecastZone;
+  }
+
+  async function getAlerts(zoneId) {
+    const response = await fetch(`https://api.weather.gov/alerts/active?zone=${zoneId}`, {
+      headers: {
+        "User-Agent": "DisasterPrepApp (disaster@example.com)",
+        "Accept": "application/ld+json"
+      }
+    })
+
+    const data = await response.json();
+    return data.features;
+  }
+
+  async function fetchLocalAlerts() {
+    if (!location) return;
+
+    const {latitude, longitude} = location.coords;
+
+    const zoneId = await getNWSZone(latitude, longitude);
+    const alerts = await getAlerts(zoneId);
+
+    setAlerts(alerts);
+  }
+
+  useEffect(() => {
+    if (!location) return;
+
+    fetchLocalAlerts();
+
+    const interval = setInterval(() => {
+      fetchLocalAlerts();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [location]);
+
   const alertStyles = {
     warning: {
       backgroundColor: '#FFF4E5',
@@ -32,37 +97,65 @@ export default function ResourceHub({navigation}) {
       borderColor: '#1976D2',
     },
   }
+
+  if (errorMsg !== null) {
+    //There's been an error
+    return (
+      <View style={styles.container}>
+        <Text>There's been an error: {errorMsg}</Text>
+      </View>
+    );
+  }
+
+  if (!location) {
+    //waiting
+    return (
+      <View style={styles.container}>
+        <Text>Getting location...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Resource Hub</Text>
-      <Card style={[
-        styles.alertCard,
-        {
-        },
-      ]}>
-        <Card.Content style={styles.alertContent}>
-          <Avatar.Icon
-            size={40}
-            icon='alert'
-            style={styles.alertIcon}
-          />
-
-          <View>
-            <Text variant='titleMedium'>
-
+      {alerts.length === 0 && (
+        <Card style={[styles.alertCard, alertStyles.info]}>
+          <Card.Content>
+            <Text>
+              No active alerts for your area.
             </Text>
-            <Text variant='bodySmall'>
+          </Card.Content>
+        </Card>
+      )}
+      {alerts.map(alert => {
+        const event = alert.properties.event;
+        const headline = alert.properties.headline;
+        const severity = alert.properties.severity;
 
-            </Text>
-          </View>
-        </Card.Content>
-
-        <Card.Actions>
-          <Button mode='contained'>
-            Learn More
-          </Button>
-        </Card.Actions>
-      </Card>
+        const styleKey =
+          severity === 'Severe' ? 'danger' :
+          severity === 'Moderate' ? 'warning' :
+          'info';
+        
+        return (
+          <Card
+            key={alert.id}
+            style={[styles.alertCard, alertStyles[styleKey]]}
+          >
+            <Card.Content style={styles.alertContent}>
+              <Avatar.Icon size={40} icon='alert' style={styles.alertIcon} />
+              <View style={{marginLeft: 12}}>
+                <Text variant='titleMedium'>{event}</Text>
+                <Text variant='bodySmall'>{headline}</Text>
+              </View>
+            </Card.Content>
+            <Card.Actions>
+              <Button mode='contained'>Learn More</Button>
+            </Card.Actions>
+          </Card>
+        )
+      })}
       {resources.map((item) => (
         <Card
           key={item.title}
