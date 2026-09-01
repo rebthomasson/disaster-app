@@ -8,6 +8,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ResourceHub from './screens/ResourceHub';
+import EvacuationMaps from './screens/EvacuationMaps';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,19 +18,34 @@ function HomeScreen({navigation}) {
       <Text>Home Screen</Text>
       <Button
         title="Go to Game Board"
-        onPress={() => navigation.navigate('GameBoard')}
+        onPress={() => navigation.navigate('Game', {
+          screen: 'GameBoard'
+        })}
       />
     </View>
   );
 }
 
-function GameStack() {
+const GameStack = createStackNavigator();
+
+function GameStackScreen() {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name='Home' component={HomeScreen} />
-      <Stack.Screen name='GameBoard' component={GameBoard} />
-    </Stack.Navigator>
+    <GameStack.Navigator screenOptions={{headerShown: false}}>
+      <GameStack.Screen name='Home' component={HomeScreen} />
+      <GameStack.Screen name='GameBoard' component={GameBoard} />
+    </GameStack.Navigator>
   )
+}
+
+const ResourceStack = createStackNavigator();
+
+function ResourceScreen() {
+  return (
+    <ResourceStack.Navigator screenOptions={{headerShown: false}}>
+      <ResourceStack.Screen name="ResourceHub" component={ResourceHub}/>
+      <ResourceStack.Screen name="EvacuationMaps" component={EvacuationMaps}/>
+    </ResourceStack.Navigator>
+  );
 }
 
 const Stack = createStackNavigator();
@@ -49,14 +65,14 @@ export default function App() {
           >
             <Tab.Screen
               name="Game"
-              component={GameStack}
+              component={GameStackScreen}
               options={{
                 tabBarLabel: 'Game',
               }}
             />
             <Tab.Screen
               name='ResourceHub'
-              component={ResourceHub}
+              component={ResourceScreen}
               options={{
                 tabBarLabel: 'Resources',
               }}

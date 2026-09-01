@@ -2,14 +2,14 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, Button, useWindowDimensions, ImageBackground, Animated, Image } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import Player from "../entities/Player";
-import TilePath from "../entities/Path";
+import TilePath from "../entities/TilePath";
 import InventoryItem from "../entities/InventoryItem";
 import {Svg, Rect} from 'react-native-svg';
 import TaskModal from "../screens/TaskModal"; 
 import ItemModal from "../screens/ItemModal"; 
 import QuizModal from "../screens/QuizModal";
 import {levels} from "../systems/levels";
-import LevelComplete from './LevelComplete';
+import LevelComplete from '../screens/LevelComplete';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GameOver from '../screens/GameOver';
 import GoalModal from '../screens/GoalModal';
@@ -342,7 +342,7 @@ export default function GameBoard() {
                 <View style={styles.boardContainer}>
                     <Svg
                         width={width}
-                        height={height * 48}  // Adjust height as needed
+                        height={height * 0.48}  // Adjust height as needed
                         viewBox={`0 0 ${maxX} ${maxY}`}
                         pointerEvents='box-none'
                         style={{position: 'relative'}}

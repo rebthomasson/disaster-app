@@ -3,6 +3,7 @@ import {ScrollView, StyleSheet, View} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {Card, Text, Avatar, Button} from 'react-native-paper';
 import * as Location from 'expo-location';
+import MapView, {Polygon, Polyline, Marker} from 'react-native-maps';
 
 const resources = [
   {

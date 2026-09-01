@@ -89,21 +89,27 @@ function randomizeEvents(tiles, rules, items, tasks) {
     updatedTiles[lastTile].icon = "🏁";
 
     const quizTask = tasks.find(t => t.quiz);
-    if (quizTask) {
+    if (quizTask && updatedTiles[5]) {
         updatedTiles[5] = {...updatedTiles[5], task: quizTask};
     }
 
-    updatedTiles[3] = {...updatedTiles[3], item: items[0] };
+    if (updatedTiles[3]) {
+        updatedTiles[3] = { ...updatedTiles[3], item: items[0] };
+    }
 
     if (items.length > 1 ) {
         const randomItemTile = getRandomValidTileIndex(updatedTiles);
-        updatedTiles[randomItemTile] = {...updatedTiles[randomItemTile], item: items[1]};
+        if (updatedTiles[randomItemTile]) {
+            updatedTiles[randomItemTile] = { ...updatedTiles[randomItemTile], item: items[1] };
+        }
     }
 
     const nonQuizTasks = tasks.filter(t => !t.quiz);
     if (nonQuizTasks.length > 0) {
         const randomTaskTile = getRandomValidTileIndex(updatedTiles);
-        updatedTiles[randomTaskTile] = {...updatedTiles[randomTaskTile], task: nonQuizTasks[0]};
+        if (updatedTiles[randomTaskTile]) {
+            updatedTiles[randomTaskTile] = { ...updatedTiles[randomTaskTile], task: nonQuizTasks[0] };
+        }
     }
 
     return updatedTiles;
@@ -118,7 +124,7 @@ export const levels = [
         name: "Level 1 - Don't Get Swept Away!",
         background: require('../assets/flood-background.jpg'),
         tintColor: 'rgba(0, 50, 100, 0.4)',
-        //overlay: require('../assets/rain.png'),
+        overlay: require('../assets/rain.png'),
         requirementsToWin: 2, //Number of tasks that must be completed
         timeLimit: 60, // 60 seconds for the level
         goal: "Complete 2 flood-prep tasks to escape the disaster!",
@@ -165,11 +171,11 @@ export const levels = [
         name: "Level 2 - Stay Outta the Heat!",
         background: require('../assets/wildfire-background.jpg'),
         tintColor: 'rgba(150, 50, 0, 0.4)',
-        //overlay: require('../assets/embers.png'),
+        overlay: require('../assets/embers.png'),
         requirementsToWin: 3,
         timeLimit: 120, // 120 seconds for the level,
         goal: "Complete 3 fire-prep tasks to survive the heat!",
-        pathTiles: randomizeEvents(mapGenerator(6, 8, 70, 20, ['fire', 'smoke', 'debris']),
+        pathTiles: randomizeEvents(mapGenerator(6, 8, 70, 20),
         {
             terrainTypes: {
                 fire: [5, 9, 13, 17],

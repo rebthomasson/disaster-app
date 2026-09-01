@@ -1,7 +1,7 @@
-export default function mapGenrator(rows, columns, tileSize, gap) {
+export default function mapGenerator(rows, columns, tileSize, gap) {
     const tiles = [];
     let id = 0;
-    const variation = () => Math.random() * 15 - 7;
+    //const variation = () => Math.random() * 15 - 7;
 
     for (let row = 0; row < rows; row++) {
         const mapDirection = row % 2 === 0 ? 1 : -1;
@@ -17,30 +17,13 @@ export default function mapGenrator(rows, columns, tileSize, gap) {
                 terrain: 'road',
                 icon: null,
                 eventChance: Math.random() * 0.4,
-                x: baseX + variation(),
-                y: baseY + variation(),
+                x: baseX,
+                y: baseY,
                 item: null,
                 task: null
             });
         }
     }
-
-    // function createTerrain(centerIndex, size, tiles, terrainType) {
-    //     for (let i = 0; i < size; i++) {
-    //         const index = centerIndex + i;
-    //         if (tiles[index]) {
-    //             tiles[index].terrain = terrainType;
-    //         }
-    //     }
-    // }
-
-    // terrainList.forEach(terrainType => {
-    //     const totalTiles = tiles.length;
-    //     const start = Math.floor(totalTiles * (i / terrainList.length));
-    //     const size = 3 + Math.floor(Math.random() * 4);
-
-    //     createTerrain(start, size, tiles, terrainType);
-    // });
 
     return tiles;
 }
