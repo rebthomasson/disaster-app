@@ -1,4 +1,4 @@
-import {Rect, G, Line, Text, Path} from 'react-native-svg';
+import {Rect, G, Text, Path} from 'react-native-svg';
 import React from 'react';
 
 const terrainStyles = {
