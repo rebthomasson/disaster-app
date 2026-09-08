@@ -3,19 +3,25 @@ import {ScrollView, StyleSheet, View} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {Card, Text, Avatar, Button} from 'react-native-paper';
 import * as Location from 'expo-location';
-import MapView, {Polygon, Polyline, Marker} from 'react-native-maps';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const resources = [
   {
-    title: 'Evacuation Maps',
-    screen: 'EvacuationMaps',
+    title: 'Disaster Shelter Maps',
+    screen: 'ShelterMaps',
     icon: 'map'
+  },
+  {
+    title: 'Emergency Contacts',
+    screen: 'EmergencyContacts',
+    icon: 'phone'
   },
   {
     title: 'Disaster FAQs',
     screen: 'FAQs',
     icon: 'help-circle'
-  }
+  },
 ]
 
 export default function ResourceHub({navigation}) {
@@ -118,60 +124,74 @@ export default function ResourceHub({navigation}) {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Resource Hub</Text>
-      {alerts.length === 0 && (
-        <Card style={[styles.alertCard, alertStyles.info]}>
-          <Card.Content>
-            <Text>
-              No active alerts for your area.
+    <SafeAreaView style={{flex: 1}}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.header}>
+          <MaterialCommunityIcons
+            name="shield-alert"
+            size={40}
+            color="#fff"
+          />
+          <View style={{marginLeft: 12}}>
+            <Text style={styles.title}>Resource Hub</Text>
+            <Text style={styles.subtitle}>
+              Knowledge • Alerts • Preparedness
             </Text>
-          </Card.Content>
-        </Card>
-      )}
-      {alerts.map(alert => {
-        const event = alert.properties.event;
-        const headline = alert.properties.headline;
-        const severity = alert.properties.severity;
-
-        const styleKey =
-          severity === 'Severe' ? 'danger' :
-          severity === 'Moderate' ? 'warning' :
-          'info';
-        
-        return (
-          <Card
-            key={alert.id}
-            style={[styles.alertCard, alertStyles[styleKey]]}
-          >
-            <Card.Content style={styles.alertContent}>
-              <Avatar.Icon size={40} icon='alert' style={styles.alertIcon} />
-              <View style={{marginLeft: 12}}>
-                <Text variant='titleMedium'>{event}</Text>
-                <Text variant='bodySmall'>{headline}</Text>
-              </View>
+          </View>
+        </View>
+        {alerts.length === 0 && (
+          <Card style={[styles.alertCard, alertStyles.info]}>
+            <Card.Content>
+              <Text>
+                No active alerts for your area.
+              </Text>
             </Card.Content>
-            <Card.Actions>
-              <Button mode='contained'>Learn More</Button>
-            </Card.Actions>
           </Card>
-        )
-      })}
-      {resources.map((item) => (
-        <Card
-          key={item.title}
-          style={styles.card}
-          onPress={() => navigation.navigate(item.screen)}
-        >
-        <Card.Title
-          title={item.title}
-          left={(props) => (
-            <Avatar.Icon {...props} icon={item.icon} />
-          )}
-        />
-      </Card>
-      ))}
-    </ScrollView>
+        )}
+        {alerts.map(alert => {
+          const event = alert.properties.event;
+          const headline = alert.properties.headline;
+          const severity = alert.properties.severity;
+
+          const styleKey =
+            severity === 'Severe' ? 'danger' :
+            severity === 'Moderate' ? 'warning' :
+            'info';
+          
+          return (
+            <Card
+              key={alert.id}
+              style={[styles.alertCard, alertStyles[styleKey]]}
+            >
+              <Card.Content style={styles.alertContent}>
+                <Avatar.Icon size={40} icon='alert' style={styles.alertIcon} />
+                <View style={{marginLeft: 12}}>
+                  <Text variant='titleMedium'>{event}</Text>
+                  <Text variant='bodySmall'>{headline}</Text>
+                </View>
+              </Card.Content>
+              <Card.Actions>
+                <Button mode='contained'>Learn More</Button>
+              </Card.Actions>
+            </Card>
+          )
+        })}
+        {resources.map((item) => (
+          <Card
+            key={item.title}
+            style={styles.card}
+            onPress={() => navigation.navigate(item.screen)}
+          >
+          <Card.Title
+            title={item.title}
+            left={(props) => (
+              <Avatar.Icon {...props} icon={item.icon} />
+            )}
+          />
+        </Card>
+        ))}
+      </ScrollView>
+    </SafeAreaView>
   )
 } 
 
@@ -179,9 +199,24 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
   },
+  header: {
+    backgroundColor: '#0D47A1',
+    paddingVertical: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginBottom: 16,
+    elevation: 4,
+  },
   title: {
     marginBottom: 16,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    fontSize: 24,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#BBDEFB',
   },
   card: {
     marginBottom: 12,
