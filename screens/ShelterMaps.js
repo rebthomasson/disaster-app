@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Text, Image } from 'react-native';
-import MapView, { Polygon, Polyline, Marker, Callout } from 'react-native-maps';
+import MapView, { Polygon, Polyline, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import {IconButton} from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function EvacuationMaps() {
+export default function ShelterMaps() {
+  const navigation = useNavigation();
   const [location, setLocation] = useState(null);
   const [zonePolygon, setZonePolygon] = useState([]);
   const [shelters, setShelters] = useState([]);
@@ -39,7 +43,7 @@ export default function EvacuationMaps() {
 
         setShelters(shelterData);
         } catch (err) {
-        console.log("ERROR IN EvacuationMaps useEffect:", err);
+        console.log("ERROR IN ShelterMaps useEffect:", err);
         }
     })();
     }, []);
@@ -134,6 +138,21 @@ export default function EvacuationMaps() {
 
   return (
     <View style={{flex: 1}}>
+        <IconButton
+            icon="arrow-left"
+            size={30}
+            style={{
+              position: 'absolute',
+              top: 40,
+              left: 10,
+              zIndex: 1000,
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: 20,
+              padding: 5,
+              elevation: 5,
+            }}
+            onPress={() => navigation.goBack()}
+        />
         <MapView
             style={styles.map}
             initialRegion={{
@@ -198,7 +217,6 @@ export default function EvacuationMaps() {
                 </View>
             )}
     </View>
-    
   );
 }
 
@@ -209,7 +227,7 @@ const styles = StyleSheet.create({
   },
   floatingPanel: {
     position: "absolute",
-    bottom: 20,
+    bottom: 65,
     left: 20,
     right: 20,
     backgroundColor: "white",

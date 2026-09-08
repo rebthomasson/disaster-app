@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, Button, useWindowDimensions, ImageBackground, Animated, Image } from 'react-native';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Player from "../entities/Player";
 import TilePath from "../entities/TilePath";
 import InventoryItem from "../entities/InventoryItem";
@@ -13,11 +13,28 @@ import LevelComplete from '../screens/LevelComplete';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GameOver from '../screens/GameOver';
 import GoalModal from '../screens/GoalModal';
-
-//Configure tile size for the grid
-const tile_size = 70;
+import {useFocusEffect} from '@react-navigation/native';
+import {IconButton} from 'react-native-paper';
+import MenuModal from '../screens/MenuModal';
+import {useNavigation} from '@react-navigation/native';
 
 export default function GameBoard() {
+    const navigation = useNavigation();
+
+    useEffect(() => {
+        navigation.getParent()?.setOptions({
+            tabBarStyle: { display: 'none' },
+        });
+
+        return () => {
+            navigation.getParent()?.setOptions({
+                tabBarStyle: {
+                    backgroundColor: '#fff',
+                },
+            });
+        }
+    }, [navigation]);
+
     const { width, height } = useWindowDimensions();
 
     //Configure tile size for the grid
@@ -36,6 +53,17 @@ export default function GameBoard() {
 
     const [timeLeft, setTimeLeft] = useState(currentLevel.timeLimit); 
     const [timerActive, setTimerActive] = useState(true); 
+    const [isPaused, setIsPaused] = useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            setIsPaused(false);
+
+            return () => {
+                setIsPaused(true);
+            };
+        }, [])
+    );
 
     const [completedTasks, setCompletedTasks] = useState([]);
 
@@ -44,6 +72,7 @@ export default function GameBoard() {
     const [taskVisible, setTaskVisible] = useState(false);
     const [showLevelComplete, setShowLevelComplete] = useState(false);
     const [showGameOver, setShowGameOver] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
 
     const [inventory, setInventory] = useState([]);
 
@@ -56,8 +85,8 @@ export default function GameBoard() {
 
     if (!pathTiles || pathTiles.length === 0) {
         return (
-            <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                <Text>Loading map...</Text>
+            <SafeAreaView style={styles.header}>
+                <Text style={styles.headerText}>Loading map...</Text>
             </SafeAreaView>
         );
     }
@@ -120,9 +149,10 @@ export default function GameBoard() {
 
     const maxX = Math.max(...pathTiles.map(t => t.x)) + tile_size;
     const maxY = Math.max(...pathTiles.map(t => t.y)) + tile_size;
+    const gamePaused = taskVisible || quizVisible || showGoal || showMenu || isPaused;
 
     useEffect(() => {
-        if (!timerActive) return;
+        if (gamePaused) return;
 
         const interval = setInterval(() => {
             setTimeLeft(prevTime => {
@@ -136,15 +166,15 @@ export default function GameBoard() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [timerActive]);
+    }, [gamePaused]);
 
     useEffect(() => {
-        if (taskVisible || quizVisible || showGoal) {
+        if (gamePaused) {
             setTimerActive(false);
         } else {
             setTimerActive(true);
         }
-    }, [taskVisible, quizVisible, showGoal]);
+    }, [gamePaused]);
 
 
     function handleTimeUp() {
@@ -171,7 +201,7 @@ export default function GameBoard() {
     }
 
     function animateDiceRoll() {
-        if (isRolling) return;
+        if (isRolling || isPaused) return;
         setIsRolling(true);
         
         let numberShuffle = setInterval(() => {
@@ -386,13 +416,21 @@ export default function GameBoard() {
                     </View>
                 </View>    
                 <View style={styles.diceContainer}>
-                    <Text style={{ fontSize: 40, fontWeight: "bold" }}>🎲 {diceRoll} </Text>
-                    {isRolling && 
-                        <Text style={{ fontSize: 20, color: 'gray', marginTop: 4 }}> 
-                            Rolling...
-                        </Text>}
+                    <Text style={{ fontSize: 40, fontWeight: "bold" }}>
+                        {isRolling ? `🎲 🎲 🎲 ${diceRoll}` : `🎲 ${diceRoll}`}
+                    </Text>
                     <Button title="🎲 Roll" onPress={animateDiceRoll} disabled={isRolling} />
                 </View>
+                <IconButton
+                    icon='menu'
+                    size={25}
+                    mode='contained'
+                    style={{ position: 'absolute', top: 0, right: 10, zIndex: 9999, elevation: 10 }}
+                    onPress={() => {
+                        setShowMenu(true);
+                        setIsPaused(true);
+                    }}
+                />
                 <TaskModal
                     visible={taskVisible}
                     task={activeTask}
@@ -443,6 +481,14 @@ export default function GameBoard() {
                     visible={showGameOver}
                     startOver={goToNextLevel}
                 />
+                <MenuModal
+                    visible={showMenu}
+                    onDismiss={() => {
+                        setShowMenu(false);
+                        setIsPaused(false);
+                    }}
+                    navigation={navigation}
+                />
             </ImageBackground>
         </SafeAreaView>
     );
@@ -473,7 +519,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
-    alignText: 'center',
+    marginTop: 5,
+    textAlign: 'center',
   },
   progressText: {
     fontSize: 12,
@@ -483,7 +530,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 15,
     backgroundColor: "#ddd",
-    marginTop: 2,
+    marginTop: 8,
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 5
