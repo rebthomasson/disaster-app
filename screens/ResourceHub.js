@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {ScrollView, StyleSheet, View} from 'react-native';
+import {ScrollView, StyleSheet, View, Linking} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import {Card, Text, Avatar, Button} from 'react-native-paper';
+import {Card, Text, Avatar, Button, List} from 'react-native-paper';
 import * as Location from 'expo-location';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -29,6 +29,7 @@ export default function ResourceHub({navigation}) {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [showGuides, setShowGuides] = useState(false);
 
   useEffect(() => {
     (async() => {
@@ -190,6 +191,57 @@ export default function ResourceHub({navigation}) {
           />
         </Card>
         ))}
+        <Card
+          style={styles.card}
+          onPress={() => setShowGuides(!showGuides)}
+        >
+          <Card.Title
+            title="Preparedness Guides"
+            left={(props) => (
+              <Avatar.Icon {...props} icon={"bookmark"} />
+            )}
+            right={() => (
+              <MaterialCommunityIcons
+                name={
+                  showGuides
+                    ? 'chevron-up'
+                    : 'chevron-down'
+                }
+                size={30}
+                color="#777"
+                style={{marginRight: 10}}
+              />
+            )}
+          />
+          {showGuides && (
+            <Card.Content>
+              <List.Item
+                title="FEMA Citizen Preparedness Guide"
+                description="Comprehensive preparedness handbook"
+                onPress={() => 
+                  Linking.openURL("https://www.fema.gov/related-link/are-you-ready-guide-citizen-preparedness")
+                }
+                style={{flexWrap: 'wrap'}}
+              />
+              <List.Item
+                title="American Red Cross"
+                description="How to Prepare for Emergencies"
+                onPress={() => 
+                  Linking.openURL("https://www.redcross.org/get-help/how-to-prepare-for-emergencies.html")
+                }
+                style={{flexWrap: 'wrap'}}
+              />
+              <List.Item
+                title="Ready.gov Resources"
+                description="A variety of free publications on disaster preparedness"
+                onPress={() => 
+                  Linking.openURL("https://www.ready.gov/publications")
+                }
+                style={{flexWrap: 'wrap'}}
+              />
+            </Card.Content>
+          )}
+        </Card>
       </ScrollView>
     </SafeAreaView>
   )
