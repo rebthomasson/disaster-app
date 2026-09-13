@@ -1,11 +1,73 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {Card, Text, Button, ProgressBar} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getCompletedGoals } from '../entities/preparednessTracker';
+import { useFocusEffect } from '@react-navigation/native';
+import { prepGoals } from '../entities/preparednessGoals';
 
 export default function HomeScreen({navigation}) {
+  const preparednessTips = [
+    "Store at least one gallon of water per person per day for three days.",
+    "Keep a flashlight and extra batteries in your emergency kit.",
+    "Know at least two evacuation routes from your neighborhood.",
+    "Maintain a list of emergency contacts in both digital and paper form.",
+    "Sign up for local emergency weather alerts.",
+    "Review your family's communication plan every six months.",
+    "Keep copies of important documents in a waterproof container.",
+    "Have a backup phone charger or power bank available.",
+  ];
+
+  const today = new Date();
+
+  const tipIndex = Math.floor(today.getTime() / (1000 * 60 * 60 * 24)) % preparednessTips.length;
+
+  const dailyTip = preparednessTips[tipIndex];
+  
+  const [completedGoals, setCompletedGoals] = useState([]);
+
+  async function  loadGoals() {
+    try {
+      const goals = await getCompletedGoals();
+
+      setCompletedGoals(goals);
+    } catch (error) {
+      console.error('Failed to load goals');
+    }
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      loadGoals();
+    }, [])
+  );
+  
+  const progress = completedGoals.length / prepGoals.length;
+
+  const progressPercent = Math.round(progress * 100);
+
+  function getBadge(progress) {
+    if (progress >= 100) {
+      return '🏆 Disaster Ready';
+    }
+
+    if (progress >= 75) {
+      return '🥇 Community Responder';
+    }
+
+    if (progress >= 50) {
+      return '🥈 Emergency Planner'
+    }
+
+    if (progress >= 25) {
+      return '🥉 Prepared Citizen'
+    }
+
+    return '🌱 Beginner';
+  }
+
   return (
     <SafeAreaView style={{flex: 1}}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -37,9 +99,7 @@ export default function HomeScreen({navigation}) {
                   Preparedness Tip of the Day
                 </Text>
                 <Text>
-                  Store at least one gallon of water per
-                  person per day for a minimum of three
-                  days.
+                  {dailyTip}
                 </Text>
               </View>
             </View>
@@ -67,13 +127,20 @@ export default function HomeScreen({navigation}) {
           </Card.Actions>
         </Card>
         <Card style={styles.card}>
-          <Card.Title
-            title="Training Simulation"
-            subtitle="Test your disaster preparedness skills"
-            left={(props) => (
+          <Card.Content>
+            <View style={styles.row}>
               <MaterialCommunityIcons name="gamepad-variant" size={40} color="#1976D2" />
-            )}
-          />
+              <View style={{ marginLeft: 12 }}>
+                <Text variant="titleMedium">
+                  Training Simulation
+                </Text>
+
+                <Text>
+                  Test your disaster preparedness skills.
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
           <Card.Content>
             <Text>
               Level:
@@ -148,19 +215,49 @@ export default function HomeScreen({navigation}) {
 
           <Card.Content>
             <Text style={styles.progressText}>
-              Emergency Contacts
+              {completedGoals.length} / {prepGoals.length} goals completed
             </Text>
-            <ProgressBar progress={0.75} />
 
-            <Text style={styles.progressText}>
-              Emergency Kit
-            </Text>
-            <ProgressBar progress={0.5} />
+            <ProgressBar
+              progress={progress}
+              style={{marginTop: 10}}
+            />
 
-            <Text style={styles.progressText}>
-              Training Completion
+            <Text style={{marginTop: 10}}>
+              {progressPercent}% Prepared
             </Text>
-            <ProgressBar progress={0.3} />
+
+            <Text style={{
+              marginTop: 10,
+              fontWeight: 'bold'
+            }}>
+              {getBadge(progressPercent)}
+            </Text>
+
+            <Text
+              style={{
+                color: '#666',
+                marginTop: 4,
+              }}
+            >
+              Keep completing preparedness activities
+              to unlock new badges.
+            </Text>
+
+            <Text style={{marginTop: 10}}>
+              Next Goals:
+            </Text>
+
+            {prepGoals
+              .filter(goal => !completedGoals.includes(goal.id)
+              )
+              .slice(0, 2)
+              .map(goal => (
+                <Text key={goal.id}>
+                  • {goal.title}
+                </Text>
+              ))
+            }
 
           </Card.Content>
         </Card>
@@ -214,6 +311,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap:'wrap'
   },
 
   grid: {

@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { View, StyleSheet, Text, Image } from 'react-native';
 import MapView, { Polygon, Polyline, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import {IconButton} from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { completeGoal } from '../entities/preparednessTracker';
 
 export default function ShelterMaps() {
   const navigation = useNavigation();
@@ -12,6 +14,13 @@ export default function ShelterMaps() {
   const [zonePolygon, setZonePolygon] = useState([]);
   const [shelters, setShelters] = useState([]);
   const [selectedShelter, setSelectedShelter] = useState(null);
+  const [showLegend, setShowLegend] = useState(false);
+
+  useEffect(() => {
+    if (location) {
+      completeGoal('shelterMap');
+    }
+  }, [location]);
 
   useEffect(() => {
     (async () => {
@@ -134,7 +143,15 @@ export default function ShelterMaps() {
     { latitude: 44.98, longitude: -93.28 },
   ];
 
-  if (!location) return <View><Text>Loading map…</Text></View>;
+  if (!location) {
+    return (
+      <SafeAreaView>
+        <View>
+          <Text>Loading map…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <View style={{flex: 1}}>
@@ -143,16 +160,44 @@ export default function ShelterMaps() {
             size={30}
             style={{
               position: 'absolute',
-              top: 40,
+              top: 50,
               left: 10,
               zIndex: 1000,
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              backgroundColor: 'rgba(215, 203, 240, 0.8)',
               borderRadius: 20,
               padding: 5,
               elevation: 5,
             }}
             onPress={() => navigation.goBack()}
         />
+        <IconButton
+            icon='information-outline'
+            size={30}
+            mode='contained'
+            style={{ position: 'absolute', top: 50, right: 10, zIndex: 9999, elevation: 10, backgroundColor: 'rgba(215, 203, 240, 0.8)', borderRadius: 20 }}
+            onPress={() => {
+                setShowLegend(!showLegend);
+            }}
+        />
+        {showLegend && (
+          <View style={styles.legendContainer}>
+            <Text style={styles.legendTitle}>Legend</Text>
+            <View style={styles.legendItem}>
+              <View style={styles.legendColorBox} />
+              <MaterialCommunityIcons name="map-marker" size={20} color="black" />
+              <Text style={styles.legendText}>Your Location</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={styles.legendColorBox} />
+              <MaterialCommunityIcons name="hospital-building" size={20} color="black" />
+              <Text style={styles.legendText}>Shelter</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={{width: 5, height: 20, backgroundColor: 'rgba(255,0,0,0.8)', marginRight: 5}} />
+              <Text style={styles.legendText}>Suggested Evacuation Route</Text>
+            </View>
+          </View>
+        )}
         <MapView
             style={styles.map}
             initialRegion={{
@@ -247,5 +292,36 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: "blue",
     fontWeight: "bold",
-  }
+  },
+  legendContainer: {
+    position: 'absolute',
+    top: 60,
+    right: 10,
+    backgroundColor: 'white',
+    padding:20,
+    borderRadius: 8,
+    elevation: 5,
+    zIndex: 1000,
+    marginRight: 10,
+  },
+  legendTitle: {
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  legendItem: {
+    flex: 1,
+    marginLeft: 5,
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  legendColorBox: {
+    width: 5,
+    height: 20,
+    backgroundColor: 'rgba(0,0,255,0.5)',
+    marginRight: 5,
+  },
+  legendText: {
+    fontSize: 12,
+    marginLeft: 7,
+  },
 });

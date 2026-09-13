@@ -12,6 +12,7 @@ import ShelterMaps from './screens/ShelterMaps';
 import HomeScreen from './screens/HomeScreen';
 import EmergencyContacts from './screens/Contacts';
 import PrepareScreen from './screens/PrepareScreen';
+import FAQs from './screens/FAQScreen';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -25,6 +26,7 @@ function ResourceScreen() {
       <ResourceStack.Screen name="ResourceHub" component={ResourceHub}/>
       <ResourceStack.Screen name="ShelterMaps" component={ShelterMaps}/>
       <ResourceStack.Screen name="EmergencyContacts" component={EmergencyContacts}/>
+      <ResourceStack.Screen name="FAQs" component={FAQs}/>
     </ResourceStack.Navigator>
   );
 }

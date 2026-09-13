@@ -5,6 +5,7 @@ import {ScrollView, StyleSheet, View, Linking} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { completeGoal } from '../entities/preparednessTracker';
 
 export default function EmergencyContacts({navigation}) {
   const [contacts, setContacts] = useState([]);
@@ -55,6 +56,7 @@ export default function EmergencyContacts({navigation}) {
     setName('');
     setPhone('');
     setRelationship('');
+    await completeGoal('contacts');
   }
 
   async function deleteContact(id) {
@@ -83,7 +85,7 @@ export default function EmergencyContacts({navigation}) {
             size={30}
             style={{
               position: 'absolute',
-              top: `20%`,
+              top: 10,
               left: 10,
               zIndex: 1000,
               backgroundColor: 'rgba(255, 255, 255, 0.8)',

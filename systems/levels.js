@@ -104,9 +104,16 @@ function randomizeEvents(tiles, rules, items, tasks) {
         }
     }
 
+    let randomTaskTile;
+
+    do {
+        randomTaskTile = getRandomValidTileIndex(updatedTiles);
+    } while (
+        randomTaskTile === 5 // Avoid the tile with the first item
+    )
+
     const nonQuizTasks = tasks.filter(t => !t.quiz);
     if (nonQuizTasks.length > 0) {
-        const randomTaskTile = getRandomValidTileIndex(updatedTiles);
         if (updatedTiles[randomTaskTile]) {
             updatedTiles[randomTaskTile] = { ...updatedTiles[randomTaskTile], task: nonQuizTasks[0] };
         }
