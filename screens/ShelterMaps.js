@@ -189,7 +189,7 @@ export default function ShelterMaps() {
             </View>
             <View style={styles.legendItem}>
               <View style={styles.legendColorBox} />
-              <MaterialCommunityIcons name="hospital-building" size={20} color="black" />
+              <MaterialCommunityIcons name="home-heart" size={20} color="black" />
               <Text style={styles.legendText}>Shelter</Text>
             </View>
             <View style={styles.legendItem}>
@@ -236,12 +236,12 @@ export default function ShelterMaps() {
                         latitude: shelter.latitude,
                         longitude: shelter.longitude
                     }}
-                    image={require('../assets/shelter.png')}
                     onPress={() => {
                         console.log('Pressed shelter:', shelter); // debug
                         setSelectedShelter(shelter);
                     }}
                 >
+                  <MaterialCommunityIcons name="home-heart" size={28} color="black" />
                 </Marker>
             ))}
             </MapView>

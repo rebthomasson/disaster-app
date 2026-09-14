@@ -11,14 +11,17 @@ import ResourceHub from './screens/ResourceHub';
 import ShelterMaps from './screens/ShelterMaps';
 import HomeScreen from './screens/HomeScreen';
 import EmergencyContacts from './screens/Contacts';
-import PrepareScreen from './screens/PrepareScreen';
+import Prepare from './screens/Prepare';
 import FAQs from './screens/FAQScreen';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import FamilyPlan from './screens/FamilyPlan';
 
 const Tab = createBottomTabNavigator();
 
 const ResourceStack = createStackNavigator();
+
+const PrepareStack = createStackNavigator();
 
 function ResourceScreen() {
   return (
@@ -29,6 +32,15 @@ function ResourceScreen() {
       <ResourceStack.Screen name="FAQs" component={FAQs}/>
     </ResourceStack.Navigator>
   );
+}
+
+function PrepareScreen() {
+  return (
+    <PrepareStack.Navigator screenOptions={{headerShown: false}}>
+      <PrepareStack.Screen name="Prepare" component={Prepare}/>
+      <PrepareStack.Screen name="FamilyPlan" component={FamilyPlan}/>
+    </PrepareStack.Navigator>
+  )
 }
 
 export default function App() {

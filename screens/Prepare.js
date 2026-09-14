@@ -15,12 +15,12 @@ const prepareItems = [
   },
   {
     title: 'Family Emergency Plan',
-    screen: 'FamilyEmergencyPlan',
+    screen: 'FamilyPlan',
     icon: 'account-group'
   },
 ]
 
-export default function PrepareScreen({navigation}) {
+export default function Prepare({navigation}) {
 
   const [completedGoals, setCompletedGoals] = useState([]);
   const [showGoals, setShowGoals] = useState(false);
@@ -45,7 +45,12 @@ export default function PrepareScreen({navigation}) {
     }
   }
 
-  const progress = Math.round((completedGoals.length / prepGoals.length) * 100);
+  const progressFrac = 
+    prepGoals.length > 0
+    ? completedGoals.length / prepGoals.length
+    : 0;
+
+  const progress = Math.round(progressFrac * 100);
 
   function getBadge(progress) {
     if (progress >= 100) {
@@ -184,7 +189,7 @@ export default function PrepareScreen({navigation}) {
                 {completedGoals.length} / {prepGoals.length} goals completed
               </Text>
               <ProgressBar
-                progress={completedGoals.length / prepGoals.length}
+                progress={progressFrac}
                 style={{marginTop: 10, marginBottom: 10}}
               /> 
               <Text>
