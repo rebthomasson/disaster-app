@@ -22,5 +22,9 @@ export const prepGoals = [
   {
     id: 'kit',
     title: 'Build Emergency Kit'
+  },
+  {
+    id: 'familyPlan',
+    title: 'Create Your Family Emergency Plan'
   }
 ];
