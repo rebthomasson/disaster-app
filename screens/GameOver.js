@@ -2,7 +2,7 @@ import { Modal, View, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { globalStyles } from '../theme/globalStyles';
 
-export default function GameOver({ visible, startOver }) {
+export default function GameOver({ visible, startOver, navigation }) {
   if (!visible) return null;
 
   return (
@@ -21,6 +21,12 @@ export default function GameOver({ visible, startOver }) {
             onPress={startOver}
           >
             <Text style={globalStyles.primaryButtonText}>Start Over</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={globalStyles.primaryButton}
+            onPress={() => navigation.navigate('Home')}
+          >
+            <Text style={globalStyles.primaryButtonText}>Return Home</Text>
           </TouchableOpacity>
         </View>
       </View>

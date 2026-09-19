@@ -20,6 +20,10 @@ export const prepGoals = [
     title: 'Complete Wildfire Training'
   },
   {
+    id: 'earthquakeTraining',
+    title: 'Complete Earthquake'
+  },
+  {
     id: 'kit',
     title: 'Build Emergency Kit'
   },

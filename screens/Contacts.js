@@ -164,7 +164,7 @@ export default function EmergencyContacts({navigation}) {
               style={globalStyles.primaryButton}
               onPress={addContact}
             >
-              <Text style={globalStyles.outlineButtonText}>Add Contact</Text>
+              <Text style={globalStyles.primaryButtonText}>Add Contact</Text>
             </TouchableOpacity>
           </Card.Content>
         </Card>
