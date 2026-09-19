@@ -9,8 +9,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import { prepGoals } from '../entities/preparednessGoals';
 import { theme } from '../theme/theme';
 import { globalStyles } from '../theme/globalStyles';
+import { levels } from '../systems/levels';
 
-export default function HomeScreen({navigation}) {
+export default function HomeScreen({navigation, route}) {
   const preparednessTips = [
     "Store at least one gallon of water per person per day for three days.",
     "Keep a flashlight and extra batteries in your emergency kit.",
@@ -21,6 +22,8 @@ export default function HomeScreen({navigation}) {
     "Keep copies of important documents in a waterproof container.",
     "Have a backup phone charger or power bank available.",
   ];
+
+  const levelIndex = route.params?.levelIndex ?? 0;
 
   const today = new Date();
 
@@ -147,18 +150,29 @@ export default function HomeScreen({navigation}) {
             </View>
           </Card.Content>
           <Card.Content>
-            <Text>
-              Level:
+            <Text style={styles.cardLabel}>Level:</Text>
+            <Text style={styles.cardValue}>
+              {levels[levelIndex].name}
             </Text>
-            <Text>
+
+            <Text style={[styles.cardLabel, { marginTop: theme.spacing.s }]}>
               Progress:
+            </Text>
+            <Text style={styles.homeStatValue}>
+              {completedGoals.includes('floodTraining') ? '✓ Flood Training' : '• Flood Training'}
+            </Text>
+            <Text style={styles.homeStatValue}>
+              {completedGoals.includes('fireTraining') ? '✓ Fire Training' : '• Fire Training'}
+            </Text>
+            <Text style={styles.homeStatValue}>
+              {completedGoals.includes('earthquakeTraining') ? '✓ Earthquake Training' : '• Earthquake Training'}
             </Text>
           </Card.Content>
           <Card.Actions>
             <TouchableOpacity
               style={globalStyles.primaryButton}
               onPress={() => navigation.navigate('Game', { screen: 'GameBoard' })}>
-              <Text style={globalStyles.outlineButtonText}>Resume Training</Text>
+              <Text style={globalStyles.primaryButtonText}>Resume Training</Text>
             </TouchableOpacity>
           </Card.Actions>
         </Card>
@@ -319,6 +333,22 @@ const styles = StyleSheet.create({
       borderWidth: 1,
       borderColor: theme.colors.border,
       elevation: 2,
+  },
+  cardLabel: {
+    fontFamily: theme.fonts.semibold,
+    fontSize: 18,
+    color: theme.colors.primary,
+  },
+  cardValue: {
+    fontFamily: theme.fonts.regular,
+    fontSize: 16,
+    color: theme.colors.accent,
+  },
+  homeStatValue: {
+    fontFamily: theme.fonts.regular,
+    fontSize: 16,
+    color: theme.colors.primary,
+    marginTop: theme.spacing.xs,
   },
 
   sectionTitle: {

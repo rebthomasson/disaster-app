@@ -1,5 +1,6 @@
 import { Modal, View, Text, TouchableOpacity } from 'react-native';
 import React, {useState, useEffect} from 'react';
+import { theme } from '../theme/theme';
 
 export default function QuizModal({ visible, quiz, onClose, onDone}) {
     const [index, setIndex] = useState(0);
@@ -28,18 +29,6 @@ export default function QuizModal({ visible, quiz, onClose, onDone}) {
     }
 
     const current = quiz[index];
-
-    function submit() {
-        const correct = selected === current.answer;
-
-        if (index === quiz.length - 1) {
-            onDone(correct);
-            onClose();
-        } else {
-            setIndex(index + 1);
-            setSelected(null);
-        }
-    }
 
     //Check each quiz answer and whether the user passed or not
     function checkAnswer(i) {
@@ -74,8 +63,8 @@ export default function QuizModal({ visible, quiz, onClose, onDone}) {
     return (
         <Modal visible={visible} transparent animationType='fade'>
             <View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'rgba(0,0,0,0.5)'}}>
-                <View style={{ backgroundColor: 'lightblue', padding:20, borderRadius: 10}}>
-                    <Text style={{fontSize:18, marginBottom:10}}>{current.question}</Text>
+                <View style={{ backgroundColor: theme.colors.accent, padding:20, borderRadius: 10}}>
+                    <Text style={{fontSize:18, marginBottom:10, fontFamily: theme.fonts.medium, color: theme.colors.surface}}>{current.question}</Text>
 
                     {current.options.map((opt, i) => (
                         <TouchableOpacity
@@ -104,7 +93,7 @@ export default function QuizModal({ visible, quiz, onClose, onDone}) {
                             style = {{
                                 fontSize: 20,
                                 fontWeight: 'bold',
-                                color: feedback === 'correct' ? 'green' : 'red',
+                                color: feedback === 'correct' ? theme.colors.background : 'red',
                                 marginTop: 10,
                                 textAlign: 'center'
                             }}

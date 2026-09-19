@@ -311,18 +311,11 @@ export default function GameBoard() {
       setScore((prev) => prev + currentLevel.scoring.taskCompleted);
       setXP((prev) => prev + 25);
 
-      if (playerPosition === lastTile && updated.length >= totalTasks) {
-        setShowLevelComplete(true);
-        setActiveModal('levelComplete');
-        setXP((prev) => prev + 25);
-
-        if (currentLevel.id === 'flood') {
-          completeGoal('floodTraining');
-        }
-        if (currentLevel.id === 'wildfire') {
-          completeGoal('fireTraining');
-        }
-      }
+      // if (playerPosition === lastTile && updated.length >= totalTasks) {
+      //   setShowLevelComplete(true);
+      //   setActiveModal('levelComplete');
+      //   setXP((prev) => prev + 25);
+      // }
     }
   }
 
@@ -386,6 +379,10 @@ export default function GameBoard() {
       setShowLevelComplete(true);
       setActiveModal('levelComplete');
       setScore((prev) => prev + currentLevel.scoring.finishReached);
+
+      if (currentLevel.id === 'flood') completeGoal('floodTraining');
+      if (currentLevel.id === 'wildfire') completeGoal('fireTraining');
+      if (currentLevel.id === 'earthquake') completeGoal('earthquakeTraining');
     }
 
     return tilesMoved;
@@ -420,6 +417,7 @@ export default function GameBoard() {
     setTimerActive(true);
     setXP((prev) => prev + currentLevel.xpReward);
     setActiveModal('goal');
+    navigation.navigate('Home', { levelIndex: levelIndex + 1 });
   }
 
   function collectItem(item, tileId) {
@@ -451,7 +449,7 @@ export default function GameBoard() {
           </View>
         )}
 
-        <ImageBackground source={currentLevel.background} style={{ flex: 1 }} resizeMode="cover">
+        <ImageBackground source={currentLevel.background} style={{ flex: 1, backgroundColor: 'transparent' }} resizeMode="cover">
           <Animated.View
             style={{
               position: 'absolute',
@@ -463,7 +461,7 @@ export default function GameBoard() {
               pointerEvents: 'none',
             }}
           >
-            <Image source={currentLevel.overlay} style={{ width: '100%', height: '100%' }} />
+            <Image source={currentLevel.overlay} style={{ width: '100%', height: '100%', backgroundColor: 'transparent' }} />
           </Animated.View>
 
           <View style={styles.header}>
@@ -502,6 +500,7 @@ export default function GameBoard() {
                 x={pathTiles[playerPosition].x}
                 y={pathTiles[playerPosition].y}
                 tile_size={tile_size}
+                style={{ zIndex: 999 }}
               />
               {pathTiles.map(
                 (tile) =>
@@ -621,6 +620,7 @@ export default function GameBoard() {
               goToNextLevel={goToNextLevel}
               levelScore={score}
               xpGained={xp}
+              navigation={navigation}
             />
           )}
 
@@ -639,6 +639,7 @@ export default function GameBoard() {
                 setShowGameOver(false);
                 setActiveModal('goal');
               }}
+              navigation={navigation}
             />
           )}
 
@@ -672,6 +673,18 @@ export default function GameBoard() {
                 setIsPaused(false);
               }}
               navigation={navigation}
+              setLevelIndex={setLevelIndex}
+              setPlayerPosition={setPlayerPosition}
+              setInventory={setInventory}
+              setCompletedTasks={setCompletedTasks}
+              setScore={setScore}
+              setXP={setXP}
+              setTimeLeft={setTimeLeft}
+              setPathTiles={setPathTiles}
+              resetPreparedness={async () => {
+                await AsyncStorage.removeItem('completedGoals');
+              }}
+              levels={levels}
             />
           )}
         </ImageBackground>

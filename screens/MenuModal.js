@@ -1,36 +1,67 @@
 import React from 'react';
 import {Modal, Portal, Card, Button, Text} from 'react-native-paper';
-import {View, StyleSheet} from 'react-native';
+import {View, StyleSheet, TouchableOpacity} from 'react-native';
+import { theme } from '../theme/theme';
+import { globalStyles } from '../theme/globalStyles';
 
-export default function MenuModal({visible, onDismiss, navigation}) {
+export default function MenuModal({
+  visible, 
+  onDismiss, 
+  navigation,
+  setLevelIndex,
+  setPlayerPosition,
+  setInventory,
+  setCompletedTasks,
+  setScore,
+  setXP,
+  setTimeLeft,
+  setPathTiles,
+  resetPreparedness,
+  levels
+}) {
     return (
         <Portal>
             <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={styles.modalContainer}>
-                <Card>
-                    <Card.Title title="Menu" />
-                      <Card.Content>
-                        <Button 
-                          mode="contained"
-                          onPress={onDismiss}
-                          style={styles.button}
-                        >
-                          Resume
-                        </Button>
-                        <Button
-                          mode="outlined"
-                          onPress={() => {onDismiss(); navigation.navigate('Resources')}}
-                          style={styles.button}>
-                          Resource Hub
-                        </Button>
-                        <Button
-                          mode="outlined"
-                          onPress={() => {onDismiss(); navigation.navigate('Home')}}
-                          style={styles.button}
-                        >
-                          Home
-                        </Button>
-                    </Card.Content>
-                </Card>
+              <View style={globalStyles.modalCard}>
+                <Text style={globalStyles.modalTitle}>
+                    Menu
+                </Text>
+                <TouchableOpacity
+                  style={globalStyles.primaryButton}
+                  onPress={() => {onDismiss()}}
+                >
+                  <Text style={globalStyles.primaryButtonText}>Resume</Text>
+                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={globalStyles.outlineButton}
+                    onPress={() => {onDismiss(); navigation.navigate('Resources')}}
+                  >
+                    <Text style={globalStyles.outlineButtonText}>Resource Hub</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={globalStyles.outlineButton}
+                    onPress={() => {onDismiss(); navigation.navigate('Home')}}
+                  >
+                    <Text style={globalStyles.outlineButtonText}>Home</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={globalStyles.outlineButton}
+                    title="Reset Game State"
+                    onPress={() => {
+                      setLevelIndex(0);
+                      setPlayerPosition(0);
+                      setInventory([]);
+                      setCompletedTasks([]);
+                      setScore(0);
+                      setXP(0);
+                      setTimeLeft(levels[0].timeLimit);
+                      setPathTiles(levels[0].pathTiles);
+                      resetPreparedness();
+                    }}
+                  >
+                    <Text style={globalStyles.outlineButtonText}> Reset Game </Text>
+                  </TouchableOpacity>
+              </View>
             </Modal>
         </Portal>
     );
@@ -42,8 +73,5 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    button: {
-        marginVertical: 10,
     },
 });
