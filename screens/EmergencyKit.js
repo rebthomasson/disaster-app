@@ -1,17 +1,56 @@
 import React, {useState, useEffect} from 'react';
-import { Checkbox, Text, Card, ProgressBar, IconButton, Avatar } from 'react-native-paper';
+import { Checkbox, Text, Card, ProgressBar, IconButton, Avatar, Divider } from 'react-native-paper';
 import {View, StyleSheet, ScrollView} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { theme } from '../theme/theme';
 
 export default function EmergencyKit({navigation}) {
   const [checkedItems, setCheckedItems] = useState([]);
 
-  const emergencyItems = [
-    {
-      id:
-    }
-  ]
+  const emergencyItems = {
+    nutritional: [
+      {id: 'water', label: 'One gallon per person per day for at least 3 days'},
+      {id: 'food', label: 'At least a several-day supply of non-perishable food'}
+    ],
+    tools: [
+      {id: 'radio', label: 'Battery-powered or hand crank radio and a NOAA Weather Radio with tone alert'},
+      {id: 'flashlight', label: 'Flashlight'},
+      {id: 'first-aid kit', label: 'First Aid Kit'},
+      {id: 'batteries', label: 'Extra batteries'},
+      {id: 'whistle', label: 'Whistle (to signal for help)'},
+      {id: 'shelter', label: 'Plastic sheeting, scissors and duct tape (to shelter in place)'},
+      {id: 'wrench', label: 'Wrench or pliers (to turn off utilities)'},
+      {id: 'can opener', label: 'Manual can opener (for food)'},
+      {id: 'maps', label: 'Local maps'},
+      {id: 'chargers', label: 'Cell phone with chargers and a backup battery'},
+      {id: 'mask', label: 'Dust mask (to help filter contaminated air)'},
+      {id: 'matches', label: 'Matches in a waterproof container'}
+    ],
+    medical: [
+      {id: 'medications', label: 'Prescription medications'},
+      {id: 'non-prescription medications', label: 'Non-prescription medications (pain relievers, anti-diarrhea, antacids, etc.'},
+      {id: 'eyeglasses', label: 'Prescription eyeglasses and contact lens solution'},
+    ],
+    miscellaneous: [
+      {id: 'docs', label: 'Important family documents in a waterproof, portable container'},
+      {id: 'cash', label: 'Cash or travelers checks'},
+      {id: 'clothes', label: 'Complete change of clothing appropriate for your climate and sturdy shoes'},
+      {id: 'hygiene', label: 'Feminine supplies and personal hygiene items'},
+      {id: 'sleeping bag', label: 'Sleeping bag or warm blanket for each person'},
+      {id: 'cookware', label: 'Mess kits, paper cups, plates, paper towels and plastic utensils'},
+      {id: 'games', label: 'Books, games, puzzles or other activities for children'},
+      {id: 'paper and pencil', label: 'Paper and pencil'}
+    ],
+  }
+
+  const categoryIcons = {
+    nutritional: 'food-apple',
+    tools: 'toolbox-outline',
+    medical: 'medical-bag',
+    miscellaneous: 'package-variant-closed'
+  }
 
   function toggleItems(id) {
     if (checkedItems.includes(id)) {
@@ -23,24 +62,38 @@ export default function EmergencyKit({navigation}) {
     }
   }
 
-  const progress = checkedItems.length / emergencyItems.length;
+  const totalItems = Object.values(emergencyItems)
+    .flat()
+    .length;
+
+  const progress = checkedItems.length / totalItems;
+
+  useEffect(() => {
+    AsyncStorage.getItem('checkedItems').then(data => {
+      if (data) setCheckedItems(JSON.parse(data));
+    });
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem('checkedItems', JSON.stringify(checkedItems));
+  }, [checkedItems]);
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <MaterialCommunityIcons name="check-circle-outline" size={40} color="#fff" />
+          <MaterialCommunityIcons name="check-circle-outline" size={40} color={theme.colors.surface} />
           <Text style={styles.title}>Emergency Kit Builder</Text>
           <IconButton
             icon="arrow-left"
-            size={30}
+            size={20}
             style={{
               position: 'absolute',
               top: 10,
               left: 10,
               zIndex: 1000,
               backgroundColor: 'rgba(255, 255, 255, 0.8)',
-              borderRadius: 20,
+              borderRadius: 25,
               padding: 5,
               elevation: 5,
             }}
@@ -49,41 +102,45 @@ export default function EmergencyKit({navigation}) {
         </View>
         <Card style={styles.infoCard}>
           <Card.Content>
-            <Text variant="titleMedium">
+            <Text style={{fontFamily: theme.fonts.bold, fontSize: 16, paddingBottom: 10}}>
               Build Your Emergency Kit
             </Text>
-            <Text>
+            <Text style={{fontFamily: theme.fonts.regular}}>
               This checklist helps you build a "go-bag" to prepare for a disaster. Check off items as you add them to your kit.
             </Text>
-            <ProgressBar progress={progress}/>
-            <Text>
-              {checkedItems.length} / {emergencyItems.length} items completed
+            <ProgressBar progress={progress} style={{marginTop: 10}} color={theme.colors.border}/>
+            <Text style={{marginVertical: 8, fontFamily: theme.fonts.regular}}>
+              {checkedItems.length} / {totalItems} items completed
             </Text>
           </Card.Content>
         </Card>
-        <Card style={styles.card}>
-          <Card.Title
-            title="Food & Water Supplies"
-            left={(props) => (
-              <Avatar.Icon {...props} icon="" />
-            )}
-          />
-          <Card.Content>
-            {emergencyItems.map(item => (
-              key={item.id}
-              
-            ))}
-            <Checkbox.Item
-              label={item.label}
-              status={
-                checkedItems.includes(item.id)
-                  ? 'checked'
-                  : 'unchecked'
-              }
-              onPress={() => toggleItems(item.id)}
+        {Object.entries(emergencyItems).map(([category, items]) => (
+          <Card key={category} style={styles.card}>
+            <Card.Title
+              title={category.charAt(0).toUpperCase() + category.slice(1)}
+              left={(props) => (
+                <Avatar.Icon {...props} icon={categoryIcons[category]} style={styles.cardIcon} />
+              )}
             />
-          </Card.Content>
-        </Card>
+            <Card.Content>
+              {items.map((item, index) => (
+                <View key={item.id}>
+                  <View style={styles.itemRow}>
+                    <Checkbox
+                      status={checkedItems.includes(item.id) ? "checked" : "unchecked"}
+                      color={theme.colors.primary}
+                      uncheckedColor={theme.colors.border}
+                      onPress={() => toggleItems(item.id)}
+                    />
+                    <Text style={styles.itemLabel}>{item.label}</Text>
+                  </View>
+
+                  {index < items.length - 1 && <Divider />}
+                </View>
+              ))}
+            </Card.Content>
+          </Card>
+        ))}
       </ScrollView>
     </SafeAreaView>
   )
@@ -94,7 +151,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    backgroundColor: '#0D47A1',
+    backgroundColor: theme.colors.accent,
     paddingVertical: 16,
     borderRadius: 20,
     alignItems: 'center',
@@ -103,19 +160,36 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 16,
-    fontWeight: 'bold',
+    fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: '#fff',
+    color: theme.colors.surface,
     textAlign: 'center',
   },
   infoCard: {
     marginBottom: 16,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: theme.colors.surface,
     borderLeftWidth: 6,
-    borderLeftColor: '#1976D2',
+    borderLeftColor: theme.colors.border,
     elevation: 4,
   },
   card: {
     marginBottom: 16,
-  }
+    backgroundColor: theme.colors.surface,
+  },
+  cardIcon: {
+    backgroundColor: theme.colors.background
+  },
+  progressBar: {
+    marginVertical: 10
+  },
+  itemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  itemLabel: {
+    fontSize: 16,
+    flexShrink: 1,
+    fontFamily: theme.fonts.regular
+  },
 })

@@ -1,10 +1,12 @@
 import React, {useState, useEffect} from 'react';
-import {View, ScrollView, StyleSheet, Alert, Linking} from 'react-native';
+import {View, ScrollView, StyleSheet, Alert, Linking, TouchableOpacity} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Avatar, Button, Card, TextInput, Text, IconButton} from 'react-native-paper'
 import { completeGoal } from '../entities/preparednessTracker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { theme } from '../theme/theme';
+import { globalStyles } from '../theme/globalStyles';
 
 export default function FamilyPlan({navigation}) {
   const [familyName, setFamilyName] = useState('');
@@ -83,14 +85,14 @@ export default function FamilyPlan({navigation}) {
 
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <MaterialCommunityIcons name="clipboard-account" size={40} color="#fff" />
+          <MaterialCommunityIcons name="clipboard-account" size={40} color={theme.colors.surface} />
           <Text style={styles.title}>Family Emergency Plan</Text>
           <IconButton
             icon="arrow-left"
-            size={30}
+            size={25}
             style={{
               position: 'absolute',
               top: 10,
@@ -118,7 +120,7 @@ export default function FamilyPlan({navigation}) {
           <Card.Title
             title="Family Information"
             left={(props) => (
-              <Avatar.Icon {...props} icon="account-group" />
+              <Avatar.Icon {...props} icon="account-group" style={styles.cardIcon} />
             )}
           />
           <Card.Content>
@@ -140,7 +142,7 @@ export default function FamilyPlan({navigation}) {
           <Card.Title
             title="Meeting Locations"
             left={(props) => (
-              <Avatar.Icon {...props} icon="map-marker" />
+              <Avatar.Icon {...props} icon="map-marker" style={styles.cardIcon}/>
             )}
           />
           <Card.Content>
@@ -174,7 +176,7 @@ export default function FamilyPlan({navigation}) {
           <Card.Title
             title="Medical Information"
             left={(props) => (
-              <Avatar.Icon {...props} icon="medical-bag" />
+              <Avatar.Icon {...props} icon="medical-bag" style={styles.cardIcon} />
             )}
           />
           <Card.Content>
@@ -198,7 +200,7 @@ export default function FamilyPlan({navigation}) {
           <Card.Title
             title="Additional Plan Notes"
             left={(props) => (
-              <Avatar.Icon {...props} icon="note-text" />
+              <Avatar.Icon {...props} icon="note-text" style={styles.cardIcon}/>
             )}
           />
           <Card.Content>
@@ -212,9 +214,8 @@ export default function FamilyPlan({navigation}) {
             />
           </Card.Content>
         </Card>
-        <Button
-          mode='contained'
-          style={styles.saveButton}
+        <TouchableOpacity
+          style={globalStyles.primaryButton}
           onPress={async () => {
             if (!validateForm()) {
               return;
@@ -246,16 +247,23 @@ export default function FamilyPlan({navigation}) {
 
           }}
         >
-          Save Plan
-        </Button>
-        <Button
-          mode='outlined'
+          <Text style={globalStyles.primaryButtonText}>Save Plan</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={globalStyles.outlineButton}
           onPress={() =>
             Linking.openURL('https://www.ready.gov/sites/default/files/2025-06/family-communication-plan_fillable-card.pdf')
           }
         >
-          View Ready.gov Template
-        </Button>
+          <Text style={{
+            color: theme.colors.border,
+            fontFamily: theme.fonts.semibold,
+            fontSize: 16,
+          }}>
+            View Ready.gov Template
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   )
@@ -266,7 +274,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    backgroundColor: '#0D47A1',
+    backgroundColor: theme.colors.accent,
     paddingVertical: 16,
     borderRadius: 20,
     alignItems: 'center',
@@ -275,23 +283,28 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 16,
-    fontWeight: 'bold',
+    fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: '#fff',
+    color: theme.colors.surface,
     textAlign: 'center',
   },
   infoCard: {
     marginBottom: 16,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: theme.colors.surface,
     borderLeftWidth: 6,
-    borderLeftColor: '#1976D2',
+    borderLeftColor: theme.colors.border,
     elevation: 4,
   },
   card: {
     marginBottom: 16,
+    backgroundColor: theme.colors.surface,
+  },
+  cardIcon: {
+    backgroundColor: theme.colors.background
   },
   input: {
     marginBottom: 12,
+    backgroundColor: theme.colors.text
   },
   saveButton: {
     marginVertical: 20,

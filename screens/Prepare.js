@@ -6,11 +6,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getCompletedGoals, getFAQProgress } from '../entities/preparednessTracker';
 import { useFocusEffect } from '@react-navigation/native';
 import { prepGoals } from '../entities/preparednessGoals';
+import { theme } from '../theme/theme';
 
 const prepareItems = [
   {
     title: 'Emergency Kit Checklist',
-    screen: 'EmergencyKitChecklist',
+    screen: 'EmergencyKit',
     icon: 'check-circle-outline'
   },
   {
@@ -73,10 +74,10 @@ export default function Prepare({navigation}) {
   }
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <MaterialCommunityIcons name="bag-personal" size={40} color="#fff" />
+          <MaterialCommunityIcons name="bag-personal" size={40} color={theme.colors.surface} />
           <Text style={styles.title}>Prepare</Text>
           <Text style={styles.subtitle}>Plan • Organize • Be Ready</Text>
         </View>
@@ -100,7 +101,7 @@ export default function Prepare({navigation}) {
               <Card.Title
                 title={item.title}
                 left={(props) => (
-                  <Avatar.Icon {...props} icon={item.icon} />
+                  <Avatar.Icon {...props} icon={item.icon} style={styles.cardIcon}/>
                 )}
               />
             </Card>
@@ -112,7 +113,7 @@ export default function Prepare({navigation}) {
           <Card.Title
             title={`Preparedness Goals (${completedGoals.length}/${prepGoals.length})`}
             left={(props) => (
-              <Avatar.Icon {...props} icon={"clipboard"} />
+              <Avatar.Icon {...props} icon={"clipboard"} style={styles.cardIcon}/>
             )}
             right={() => (
               <MaterialCommunityIcons
@@ -122,7 +123,7 @@ export default function Prepare({navigation}) {
                     : 'chevron-down'
                 }
                 size={30}
-                color="#777"
+                color={theme.colors.accent}
                 style={{marginRight: 10}}
               />
             )}
@@ -168,7 +169,7 @@ export default function Prepare({navigation}) {
           <Card.Title
             title="Your Progress"
             left={(props) => (
-              <Avatar.Icon {...props} icon={"chart-line"} />
+              <Avatar.Icon {...props} icon={"chart-line"} style={styles.cardIcon}/>
             )}
             right={() => (
               <MaterialCommunityIcons
@@ -178,24 +179,25 @@ export default function Prepare({navigation}) {
                     : 'chevron-down'
                 }
                 size={30}
-                color="#777"
+                color={theme.colors.accent}
                 style={{marginRight: 10}}
               />
             )}
           />
           {showProgress && (
             <Card.Content>
-              <Text style={{marginBottom: 10}}>
+              <Text style={{marginBottom: 10, fontFamily: theme.fonts.regular}}>
                 {completedGoals.length} / {prepGoals.length} goals completed
               </Text>
               <ProgressBar
                 progress={progressFrac}
+                color={theme.colors.border}
                 style={{marginTop: 10, marginBottom: 10}}
               /> 
               <Text>
                 {progress}% Prepared
               </Text>
-              <Text style={{marginTop: 10, fontWeight: 'bold'}}>
+              <Text style={{marginTop: 10, fontFamily: theme.fonts.bold}}>
                 Badge: {getBadge(progress)}
               </Text>
             </Card.Content>
@@ -211,7 +213,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    backgroundColor: '#0D47A1',
+    backgroundColor: theme.colors.accent,
     paddingVertical: 16,
     borderRadius: 20,
     alignItems: 'center',
@@ -220,24 +222,30 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 16,
-    fontWeight: 'bold',
     fontSize: 24,
-    color: '#fff',
+    color: theme.colors.surface,
     textAlign: 'center',
+    fontFamily: theme.fonts.bold
   },
   subtitle: {
     fontSize: 14,
-    color: '#BBDEFB',
+    color: theme.colors.surface,
+    fontFamily: theme.fonts.medium
   },
   infoCard: {
     marginBottom: 16,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: theme.colors.surface,
     borderLeftWidth: 6,
-    borderLeftColor: '#1976D2',
+    borderLeftColor: theme.colors.border,
+    fontFamily: theme.fonts.regular,
     elevation: 4,
   },
   card: {
     marginBottom: 16,
+    backgroundColor: theme.colors.surface
+  },
+  cardIcon: {
+    backgroundColor: theme.colors.background
   },
   row: {
     flexDirection: 'row',
@@ -246,6 +254,7 @@ const styles = StyleSheet.create({
   icon: {
     marginLeft: 8,
     padding: 8,
+    //color: theme.colors.accent
   },
   goalRow: {
     flexDirection: 'row',

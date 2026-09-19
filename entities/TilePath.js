@@ -7,8 +7,8 @@ const terrainStyles = {
         icon: '🟫',
     },
     "debris": {
-        fill: "#9E9E9E",
-        icon: '🪨',
+        fill: "#a48703",
+        icon: '🪵',
     },
     "water": {
         fill: "#42A5F5",
@@ -21,6 +21,14 @@ const terrainStyles = {
     "smoke": {
         fill: "#90A4AE",
         icon: '💨',
+    },
+    "rock": {
+        fill: "#9E9E9E",
+        icon: '🪨',
+    },
+    "rubble": {
+        fill: "#d37676",
+        icon: '🧱',
     },
     "finish": {
         fill: "#FFD54F",

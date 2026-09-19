@@ -4,6 +4,7 @@ import {View, StyleSheet, ScrollView} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { readFAQ } from '../entities/preparednessTracker';
+import { theme } from '../theme/theme';
 
 const faqs = [
   {
@@ -100,17 +101,17 @@ export default function FAQs({navigation}) {
   }, []);
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={{padding: 10}}>
         <View style={styles.header}>
           <MaterialCommunityIcons
             name="help-circle"
             size={40}
-            color="#fff"
+            color={theme.colors.surface}
           />
           <IconButton
             icon="arrow-left"
-            size={30}
+            size={25}
             style={{
               position: 'absolute',
               top: 10,
@@ -151,6 +152,7 @@ export default function FAQs({navigation}) {
                 <MaterialCommunityIcons
                   name={category.icon}
                   size={24}
+                  style={{paddingLeft: 10, color: theme.colors.primary}}
                 />
               )}
               style={{flexWrap: 'wrap'}}
@@ -165,7 +167,7 @@ export default function FAQs({navigation}) {
               }
                 >
                   <View style={styles.answer}>
-                    <Text>
+                    <Text style={{fontFamily: theme.fonts.regular}}>
                       {q.answer}
                     </Text>
                   </View>
@@ -182,7 +184,7 @@ export default function FAQs({navigation}) {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#0D47A1',
+    backgroundColor: theme.colors.accent,
     paddingVertical: 16,
     borderRadius: 20,
     alignItems: 'center',
@@ -191,25 +193,27 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 16,
-    fontWeight: 'bold',
+    fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: '#fff',
+    color: theme.colors.surface,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#BBDEFB',
+    color: theme.colors.surface,
+    fontFamily: theme.fonts.medium,
   },
   infoCard: {
     marginBottom: 16,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: theme.colors.surface,
     borderLeftWidth: 6,
-    borderLeftColor: '#1976D2',
+    borderLeftColor: theme.colors.border,
     elevation: 4,
   },
   answer: {
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#c3cef7'
+    backgroundColor: theme.colors.text,
+    fontFamily: theme.fonts.regular
   }
 })

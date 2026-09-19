@@ -17,6 +17,15 @@ export default function QuizModal({ visible, quiz, onClose, onDone}) {
     }, [visible, quiz]);
 
     if (!visible || !quiz) return null;
+    if (!Array.isArray(quiz) || quiz.length === 0) {
+        console.warn("Invalid quiz data:", quiz);
+        return null;
+    }
+
+    if (!quiz[index]) {
+        console.warn("Quiz entry missing at index: ", index, quiz);
+        return null;
+    }
 
     const current = quiz[index];
 

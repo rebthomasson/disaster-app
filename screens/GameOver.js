@@ -1,14 +1,29 @@
-import { Modal, View, Text, Button } from 'react-native';
+import { Modal, View, Text } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { globalStyles } from '../theme/globalStyles';
 
-export default function GameOver({visible, startOver}) {
-    return (
-        <Modal visible={visible} transparent animationType='fade'>
-            <View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'rgba(0,0,0,0.5)'}}>
-                <View style={{ backgroundColor: 'lightblue', padding:20, borderRadius: 10}}>
-                    <Text style={{fontSize:22, fontWeight: 'bold', marginBottom:10, textAlign: 'center'}}>Game Over!</Text>
-                    <Button title='Start Over' onPress={startOver} />
-                </View>
-            </View>
-        </Modal>
-    );
+export default function GameOver({ visible, startOver }) {
+  if (!visible) return null;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+      }}>
+        <View style={globalStyles.modalCard}>
+          <Text style={globalStyles.modalTitle}>Game Over</Text>
+
+          <TouchableOpacity
+            style={globalStyles.primaryButton}
+            onPress={startOver}
+          >
+            <Text style={globalStyles.primaryButtonText}>Start Over</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
 }

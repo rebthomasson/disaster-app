@@ -1,509 +1,683 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, Button, useWindowDimensions, ImageBackground, Animated, Image } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Button,
+  useWindowDimensions,
+  ImageBackground,
+  Animated,
+  Image,
+  AppState,
+} from 'react-native';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import Player from "../entities/Player";
-import TilePath from "../entities/TilePath";
-import InventoryItem from "../entities/InventoryItem";
-import {Svg, Rect} from 'react-native-svg';
-import TaskModal from "../screens/TaskModal"; 
-import ItemModal from "../screens/ItemModal"; 
-import QuizModal from "../screens/QuizModal";
-import {levels} from "../systems/levels";
-import LevelComplete from '../screens/LevelComplete';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import GameOver from '../screens/GameOver';
-import GoalModal from '../screens/GoalModal';
-import {useFocusEffect} from '@react-navigation/native';
-import {IconButton} from 'react-native-paper';
-import MenuModal from '../screens/MenuModal';
-import {useNavigation} from '@react-navigation/native';
+import { Svg, Rect } from 'react-native-svg';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { IconButton } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import Player from '../entities/Player';
+import TilePath from '../entities/TilePath';
+import InventoryItem from '../entities/InventoryItem';
+import { levels } from '../systems/levels';
 import { completeGoal } from '../entities/preparednessTracker';
 
+import TaskModal from '../screens/TaskModal';
+import ItemModal from '../screens/ItemModal';
+import QuizModal from '../screens/QuizModal';
+import LevelComplete from '../screens/LevelComplete';
+import GameOver from '../screens/GameOver';
+import GoalModal from '../screens/GoalModal';
+import MenuModal from '../screens/MenuModal';
+import Victory from '../screens/VictoryModal';
+import InstructionsModal from '../screens/InstructionsModal';
+import { theme } from '../theme/theme';
+import { globalStyles } from '../theme/globalStyles';
+
+// Debounced autosave (single instance)
+const saveGameDebounced = (() => {
+  let timeout = null;
+  return (state) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(async () => {
+      try {
+        await AsyncStorage.setItem('GAME_STATE', JSON.stringify(state));
+      } catch (e) {
+        console.log('Error saving game state:', e);
+      }
+    }, 500);
+  };
+})();
+
 export default function GameBoard() {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
+  const { width, height } = useWindowDimensions();
 
-    useEffect(() => {
-        navigation.getParent()?.setOptions({
-            tabBarStyle: { display: 'none' },
-        });
+  useEffect(() => {
+    navigation.getParent()?.setOptions({
+      tabBarStyle: { display: 'none' },
+    });
 
-        return () => {
-            navigation.getParent()?.setOptions({
-                tabBarStyle: {
-                    backgroundColor: '#fff',
-                },
-            });
-        }
-    }, [navigation]);
+    return () => {
+      navigation.getParent()?.setOptions({
+        tabBarStyle: {
+          backgroundColor: '#fff',
+        },
+      });
+    };
+  }, [navigation]);
 
-    const { width, height } = useWindowDimensions();
-    const boardHeight = Math.min(height * 0.45, 350); // Adjust the multiplier as needed for your design
+  const boardHeight = Math.min(height * 0.45, 1000);
+  const tile_size = Math.min(width * 0.18, 70);
 
-    //Configure tile size for the grid
-    const tile_size = width * 0.18; // Adjust the divisor to change tile size
+  // Modal manager: only one modal at a time
+  const [activeModal, setActiveModal] = useState(null);
 
-    //Configuring state
-    const [levelIndex, setLevelIndex] = useState(0);
-    const currentLevel = levels[levelIndex];
-    if (!currentLevel || !currentLevel.background || !currentLevel.tintColor) {
-        return (
-            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>Loading level...</Text>
-            </SafeAreaView>
-        );
-    }
+  // Core game state
+  const [levelIndex, setLevelIndex] = useState(0);
+  const currentLevel = levels[levelIndex];
 
-    const [timeLeft, setTimeLeft] = useState(currentLevel.timeLimit); 
-    const [timerActive, setTimerActive] = useState(true); 
-    const [isPaused, setIsPaused] = useState(false);
-
-    useFocusEffect(
-        useCallback(() => {
-            setIsPaused(false);
-
-            return () => {
-                setIsPaused(true);
-            };
-        }, [])
-    );
-
-    const [completedTasks, setCompletedTasks] = useState([]);
-
-    const [playerPosition, setPlayerPosition] = useState(0);
-    const [activeTask, setActiveTask] = useState(null);
-    const [taskVisible, setTaskVisible] = useState(false);
-    const [showLevelComplete, setShowLevelComplete] = useState(false);
-    const [showGameOver, setShowGameOver] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
-
-    const [inventory, setInventory] = useState([]);
-
-    const [foundItem, setFoundItem] = useState(null);
-
-    const [quizVisible, setQuizVisible] = useState(false);
-    const [activeQuiz, setActiveQuiz] = useState(null);
-
-    const [pathTiles, setPathTiles] = useState(currentLevel.pathTiles);
-
-    if (!pathTiles || pathTiles.length === 0) {
-        return (
-            <SafeAreaView style={styles.header}>
-                <Text style={styles.headerText}>Loading map...</Text>
-            </SafeAreaView>
-        );
-    }
-
-
-    const [showGoal, setShowGoal] = useState(true);
-
-    const [score, setScore] = useState(0);
-    const [xp, setXP] = useState(0);
-
-    const [playerLevel, setPlayerLevel] = useState(1);
-
-    const [alertMessage, setAlertMessage] = useState(null);
-
-    useEffect(() => {
-        if (alertMessage) {
-            const timer = setTimeout(() => {
-                setAlertMessage(null);
-            }, 3000); // Alert will disappear after 3 seconds
-
-            return () => clearTimeout(timer);
-        }
-    }, [alertMessage]);
-
-    const rainOpacity = useRef(new Animated.Value(0.3)).current;
-
-    useEffect(() => {
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(rainOpacity, {
-                    toValue: 0.7,
-                    duration: 1000,
-                    useNativeDriver: true
-                }),
-                Animated.timing(rainOpacity, {
-                    toValue: 0.3,
-                    duration: 1000,
-                    useNativeDriver: true
-                })
-            ])
-        ).start();
-    }, []);
-
-    const [diceRoll, setDiceRoll] = useState(1);
-    const [isRolling, setIsRolling] = useState(false);
-
-    useEffect(() => {
-        const xpLeveling = playerLevel * 100;
-
-        if (xp >= xpLeveling) {
-            setPlayerLevel(prev => {
-                const newLevel = prev + 1;
-                setAlertMessage(`You leveled up! You are now a level ${newLevel} player.`);
-                return newLevel;
-            });
-        }
-    }, [xp]);
-
-    const totalTasks = pathTiles.filter(tile => tile.task).length;
-
-    const maxX = Math.max(...pathTiles.map(t => t.x)) + tile_size;
-    const maxY = Math.max(...pathTiles.map(t => t.y)) + tile_size;
-    const gamePaused = taskVisible || quizVisible || showGoal || showMenu || isPaused;
-
-    useEffect(() => {
-        if (gamePaused) return;
-
-        const interval = setInterval(() => {
-            setTimeLeft(prevTime => {
-                if (prevTime <= 1) {
-                    clearInterval(interval);
-                    handleTimeUp();
-                    return 0;
-                }
-                return prevTime - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [gamePaused]);
-
-    useEffect(() => {
-        if (gamePaused) {
-            setTimerActive(false);
-        } else {
-            setTimerActive(true);
-        }
-    }, [gamePaused]);
-
-
-    function handleTimeUp() {
-        setTimerActive(false);
-        setShowGameOver(true);
-    }
-
-    const lastTile = pathTiles.length -1;
-
-    
-    function completeTask(taskId) {
-        if (!completedTasks.includes(taskId)) {
-            const updated = [...completedTasks, taskId];
-            setCompletedTasks(updated);
-
-            setScore(prev => prev + currentLevel.scoring.taskCompleted);
-            setXP(prev => prev + 25);
-
-            if (playerPosition === lastTile && completedTasks.length >= totalTasks) {
-                setShowLevelComplete(true);
-                setXP(prev => prev + 25);
-                if (currentLevel.id === 'flood') {
-                    completeGoal('floodTraining');
-                }
-                if (currentLevel.id === 'wildfire') {
-                    completeGoal('fireTraining');
-                }
-            }
-        }
-    }
-
-    function animateDiceRoll() {
-        if (isRolling || isPaused) return;
-        setIsRolling(true);
-        
-        let numberShuffle = setInterval(() => {
-            setDiceRoll(Math.floor(Math.random() * 6) + 1);
-        }, 100);
-
-        setTimeout(() => {
-            clearInterval(numberShuffle);
-
-            const finalRoll = Math.floor(Math.random() * 6) + 1;
-
-            const actualTilesMoved = rollDice(finalRoll);
-
-            setDiceRoll(actualTilesMoved);
-            
-            setIsRolling(false);
-        }, 1000);
-    }
-
-    function rollDice(roll) {
-        let newPosition = playerPosition;
-        let triggered = false;
-        let tilesMoved = 0;
-        const lastTile = pathTiles.length - 1;
-
-        // Check every tile between old and new position
-        for (let i = 1; i <= roll; i++) {
-            if (triggered) {
-                break;
-            }
-            const nextIndex = newPosition + 1;
-            if (nextIndex >= pathTiles.length) {
-                break;
-            }
-            const tile = pathTiles[nextIndex];
-
-            newPosition = nextIndex;
-            tilesMoved++;
-
-            if (tile.task) {
-                setActiveTask(tile.task);
-                setTaskVisible(true);
-                triggered = true;
-                continue;
-            }
-            if (tile.item) {
-                collectItem(tile.item, tile.id);
-                triggered = true;
-                continue;
-
-            }
-            if (tile.eventType && Math.random() < tile.eventChance) {
-                triggerEvent(tile);
-                triggered = true;
-                break;
-            }
-        }
-
-        setPlayerPosition(newPosition);
-
-        if (newPosition === lastTile && completedTasks.length >= totalTasks) {
-            setShowLevelComplete(true);
-            setScore(prev => prev + currentLevel.scoring.finishReached);
-        }
-
-        return tilesMoved;
-    }
-
-    function triggerEvent(tile) {
-        setAlertMessage(tile.message);
-
-        setScore(prev => prev + currentLevel.scoring.eventTriggered);
-        setXP(prev => prev + 25);
-
-        if (tile.movementPenalty) {
-            setPlayerPosition(prev => Math.max(prev - tile.movementPenalty, 0));
-        }
-    }
-
-    //Controls what happens when moving to the next level
-    function goToNextLevel() {
-        //If it's the last level in the index, reset to level 1
-        if (levelIndex === levels.length - 1 || showGameOver) {
-            setLevelIndex(0);
-            setCompletedTasks([]);
-            setShowLevelComplete(false);
-            setPlayerPosition(0);
-            setInventory([]);
-            setPathTiles(levels[0].pathTiles);
-            setTimeLeft(levels[0].timeLimit);
-            setTimerActive(true);
-            setShowGameOver(false);
-            setShowGoal(true);
-            setXP(0);
-            return;
-        }
-        //Reset values and state
-        setLevelIndex(levelIndex + 1);
-        setCompletedTasks([]);
-        setShowLevelComplete(false);
-        setPlayerPosition(0);
-        setInventory([]);
-        setPathTiles(levels[levelIndex + 1].pathTiles);
-        setTimeLeft(levels[levelIndex + 1].timeLimit);
-        setTimerActive(true);
-        setShowGoal(true);
-        setXP(prev => prev + currentLevel.xpReward);
-    }
-
-    //When item is collected
-    function collectItem(item, tileId) {
-        //This add the item to the inventory
-        setInventory(prev => [...prev, item]);
-
-        // Clear item from the tile
-        const updatedTiles = pathTiles.map(tile =>
-            tile.id === tileId ? { ...tile, item: null } : tile
-        )
-
-        setPathTiles(updatedTiles);
-        
-        setFoundItem(item);
-        setScore(prev => prev + currentLevel.scoring.itemCollected);
-    }
-
+  if (!currentLevel || !currentLevel.background || !currentLevel.tintColor) {
     return (
-        <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
-            <ScrollView>
-                {alertMessage && (
-                    <View style={styles.alertContainer}>
-                        <Text style={styles.alertText}>⚠️ Alert </Text>
-                        <Text style={styles.alertText}>{alertMessage}</Text>
-                    </View>
-                )}
-                <ImageBackground source={currentLevel.background} style={{ flex: 1 }} resizeMode="cover">
-                    <Animated.View style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        opacity: rainOpacity,
-                        pointerEvents: 'none',
-                    }}>
-                        <Image
-                            source={currentLevel.overlay}
-                            style={{ width: '100%', height: '100%' }}
-                        />
-                    </Animated.View>
-                    <View style={styles.header}>
-                        <Text style={styles.headerText}>{currentLevel.name}</Text>
-                        <View style={styles.progressBar}>
-                            <View
-                            style={[
-                                styles.progressFill,
-                                { width: `${(completedTasks.length / totalTasks) * 100}%` }
-                            ]}
-                            />
-                        </View>
-
-                        <Text style={styles.progressText}>{completedTasks.length} / {totalTasks} tasks completed </Text>
-                    </View>
-                    <View style={styles.header}>
-                        <Text style={styles.headerItem}>⏳ {timeLeft} seconds</Text>
-                        <Text style={styles.headerItem}>Score: {score} </Text>
-                        <Text style={styles.headerItem}>XP: {xp} </Text>
-                        <Text style={styles.headerItem}>Danger Level: {playerLevel}</Text>
-                    </View>
-                    <View style={styles.boardContainer}>
-                        <Svg
-                            width={width}
-                            height={boardHeight}  // Adjust height as needed
-                            viewBox={`0 0 ${maxX} ${maxY}`}
-                            pointerEvents='box-none'
-                            style={{position: 'relative',}}
-                        >
-                            <Rect
-                                x={0}
-                                y={0}
-                                width={maxX}
-                                height={maxY}
-                                fill={currentLevel.tintColor}
-                            />
-                            <TilePath
-                                tile_size = {tile_size}
-                                pathTiles={pathTiles}
-                                playerPosition={playerPosition}
-                                //onTilePress={handleTilePress}
-                            />
-                            <Player
-                                x = {pathTiles[playerPosition].x}
-                                y = {pathTiles[playerPosition].y}
-                                tile_size={tile_size}
-                            />
-                            {pathTiles.map(tile => (
-                                tile.item && <InventoryItem
-                                    key={tile.item.id}
-                                    x={tile.x}
-                                    y={tile.y}
-                                    tile_size={tile_size}
-                                    icon={tile.item.icon}
-                                    onPress = {() => collectItem(tile.item, tile.id)}
-                                />
-                            ))}
-                        </Svg>
-                    </View>
-                    <View style={styles.bottomContainer}>
-                        <Text style={styles.inventoryHeaderText}>Inventory</Text>
-                        <View style={styles.inventorySection}>
-                            {inventory.map(item => (
-                                <View key={item.id} style={styles.inventorySlot}>
-                                    <Text style={styles.inventoryText}>{item.icon} {item.name}</Text>
-                                </View>
-                            ))}
-                        </View>    
-                        <View style={styles.diceContainer}>
-                            <Text style={{ fontSize: 40, fontWeight: "bold" }}>
-                                {isRolling ? `🎲 🎲 🎲 ${diceRoll}` : `🎲 ${diceRoll}`}
-                            </Text>
-                            <Button title="🎲 Roll" onPress={animateDiceRoll} disabled={isRolling} />
-                        </View>
-                    </View>
-                    <IconButton
-                        icon='menu'
-                        size={25}
-                        mode='contained'
-                        style={{ position: 'absolute', top: 0, right: 10, zIndex: 9999, elevation: 10 }}
-                        onPress={() => {
-                            setShowMenu(true);
-                            setIsPaused(true);
-                        }}
-                    />
-                    <TaskModal
-                        visible={taskVisible}
-                        task={activeTask}
-                        onClose={() => {
-                            setTaskVisible(false);
-                            if (!activeTask.quiz) {
-                                completeTask(activeTask.id)
-                            }
-                        }}
-                        onStartQuiz={(quiz) => {
-                            setActiveQuiz(quiz);
-                            setQuizVisible(true);
-                        }}
-                    />
-
-                    <QuizModal
-                        visible={quizVisible}
-                        quiz={activeQuiz}
-                        onClose={() => {
-                            setQuizVisible(false);
-                        }}
-                        onDone={(passed) => {
-                            if (passed) {
-                                completeTask(activeTask.id);
-                            }
-                        }}
-                    />
-
-                    <ItemModal
-                        item={foundItem}
-                        onClose={() => setFoundItem(null)}
-                    />
-
-                    <GoalModal
-                        visible={showGoal}
-                        level={currentLevel}
-                        onClose={() => setShowGoal(false)}
-                    />
-
-                    <LevelComplete
-                        visible={showLevelComplete}
-                        goToNextLevel={goToNextLevel}
-                        levelScore={score}
-                        xpGained={xp}
-                    />
-
-                    <GameOver
-                        visible={showGameOver}
-                        startOver={goToNextLevel}
-                    />
-                    <MenuModal
-                        visible={showMenu}
-                        onDismiss={() => {
-                            setShowMenu(false);
-                            setIsPaused(false);
-                        }}
-                        navigation={navigation}
-                    />
-                </ImageBackground>
-            </ScrollView>
-        </SafeAreaView>
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Loading level...</Text>
+      </SafeAreaView>
     );
+  }
+
+  const [timeLeft, setTimeLeft] = useState(currentLevel.timeLimit);
+  const [timerActive, setTimerActive] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [playerPosition, setPlayerPosition] = useState(0);
+
+  const [activeTask, setActiveTask] = useState(null);
+  const [activeQuiz, setActiveQuiz] = useState(null);
+
+  const [showLevelComplete, setShowLevelComplete] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
+
+  const [inventory, setInventory] = useState([]);
+  const [foundItem, setFoundItem] = useState(null);
+
+  const [pathTiles, setPathTiles] = useState(currentLevel.pathTiles);
+  if (!pathTiles || pathTiles.length === 0) {
+    return (
+      <SafeAreaView style={styles.header}>
+        <Text style={styles.headerText}>Loading map...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const [score, setScore] = useState(0);
+  const [xp, setXP] = useState(0);
+  const [playerLevel, setPlayerLevel] = useState(1);
+
+  const [alertMessage, setAlertMessage] = useState(null);
+  const [levelingMessage, setLevelingMessage] = useState(null);
+
+  const [showVictory, setShowVictory] = useState(false);
+
+  const rainOpacity = useRef(new Animated.Value(0.3)).current;
+  const [diceRoll, setDiceRoll] = useState(1);
+  const [isRolling, setIsRolling] = useState(false);
+
+  const totalTasks = pathTiles.filter((tile) => tile.task).length;
+  const maxX = Math.max(...pathTiles.map((t) => t.x)) + tile_size;
+  const maxY = Math.max(...pathTiles.map((t) => t.y)) + tile_size;
+  const lastTile = pathTiles.length - 1;
+
+  const gamePaused = !!activeModal || isPaused;
+
+  // Focus effect: pause when leaving
+  useFocusEffect(
+    useCallback(() => {
+      setIsPaused(false);
+      return () => {
+        setIsPaused(true);
+        const state = {
+          levelIndex,
+          playerPosition,
+          inventory,
+          completedTasks,
+          score,
+          xp,
+          playerLevel,
+          timeLeft,
+          pathTiles,
+        };
+        saveGameDebounced(state);
+      };
+    }, [levelIndex, playerPosition, inventory, completedTasks, score, xp, playerLevel, timeLeft, pathTiles])
+  );
+
+  // Load saved game
+  useEffect(() => {
+    async function loadGame() {
+      try {
+        const saved = await AsyncStorage.getItem('GAME_STATE');
+        if (saved) {
+          const state = JSON.parse(saved);
+
+          setLevelIndex(state.levelIndex);
+          setPlayerPosition(state.playerPosition);
+          setInventory(state.inventory);
+          setCompletedTasks(state.completedTasks);
+          setScore(state.score);
+          setXP(state.xp);
+          setPlayerLevel(state.playerLevel);
+          setTimeLeft(state.timeLeft);
+          setPathTiles(state.pathTiles);
+
+          setActiveModal(null); // resume without intro
+        } else {
+          // first time: show instructions
+          setActiveModal('instructions');
+        }
+      } catch (e) {
+        console.log('Error loading game state: ', e);
+      }
+    }
+
+    loadGame();
+  }, []);
+
+  // Debounced autosave on state changes
+  useEffect(() => {
+    const state = {
+      levelIndex,
+      playerPosition,
+      inventory,
+      completedTasks,
+      score,
+      xp,
+      playerLevel,
+      timeLeft,
+      pathTiles,
+    };
+    saveGameDebounced(state);
+  }, [levelIndex, playerPosition, inventory, completedTasks, score, xp, playerLevel, timeLeft, pathTiles]);
+
+  // AppState save
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next !== 'active') {
+        const state = {
+          levelIndex,
+          playerPosition,
+          inventory,
+          completedTasks,
+          score,
+          xp,
+          playerLevel,
+          timeLeft,
+          pathTiles,
+        };
+        saveGameDebounced(state);
+      }
+    });
+    return () => sub.remove();
+  }, [levelIndex, playerPosition, inventory, completedTasks, score, xp, playerLevel, timeLeft, pathTiles]);
+
+  // Alerts
+  useEffect(() => {
+    if (alertMessage) {
+      const timer = setTimeout(() => setAlertMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertMessage]);
+
+  useEffect(() => {
+    if (levelingMessage) {
+      const timer = setTimeout(() => setLevelingMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [levelingMessage]);
+
+  // Rain animation
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rainOpacity, {
+          toValue: 0.7,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rainOpacity, {
+          toValue: 0.3,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [rainOpacity]);
+
+  // XP leveling
+  useEffect(() => {
+    const xpLeveling = playerLevel * 100;
+    if (xp >= xpLeveling) {
+      setPlayerLevel((prev) => {
+        const newLevel = prev + 1;
+        setLevelingMessage(`You leveled up! You are now a level ${newLevel} player.`);
+        return newLevel;
+      });
+    }
+  }, [xp, playerLevel]);
+
+  // Timer
+  useEffect(() => {
+    if (gamePaused) {
+      setTimerActive(false);
+      return;
+    }
+
+    setTimerActive(true);
+    const interval = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(interval);
+          handleTimeUp();
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [gamePaused]);
+
+  function handleTimeUp() {
+    setTimerActive(false);
+    setShowGameOver(true);
+    setActiveModal('gameOver');
+  }
+
+  async function resetGame() {
+    try {
+      await AsyncStorage.removeItem('GAME_STATE');
+    } catch (e) {
+      console.log('Error resetting game state: ', e);
+    }
+  }
+
+  function completeTask(taskId) {
+    if (!completedTasks.includes(taskId)) {
+      const updated = [...completedTasks, taskId];
+      setCompletedTasks(updated);
+
+      setScore((prev) => prev + currentLevel.scoring.taskCompleted);
+      setXP((prev) => prev + 25);
+
+      if (playerPosition === lastTile && updated.length >= totalTasks) {
+        setShowLevelComplete(true);
+        setActiveModal('levelComplete');
+        setXP((prev) => prev + 25);
+
+        if (currentLevel.id === 'flood') {
+          completeGoal('floodTraining');
+        }
+        if (currentLevel.id === 'wildfire') {
+          completeGoal('fireTraining');
+        }
+      }
+    }
+  }
+
+  function animateDiceRoll() {
+    if (isRolling || isPaused || activeModal) return;
+    setIsRolling(true);
+
+    let numberShuffle = setInterval(() => {
+      setDiceRoll(Math.floor(Math.random() * 6) + 1);
+    }, 100);
+
+    setTimeout(() => {
+      clearInterval(numberShuffle);
+
+      const finalRoll = Math.floor(Math.random() * 6) + 1;
+      const actualTilesMoved = rollDice(finalRoll);
+
+      setDiceRoll(actualTilesMoved);
+      setIsRolling(false);
+    }, 1000);
+  }
+
+  function rollDice(roll) {
+    let newPosition = playerPosition;
+    let triggered = false;
+    let tilesMoved = 0;
+
+    for (let i = 1; i <= roll; i++) {
+      if (triggered) break;
+
+      const nextIndex = newPosition + 1;
+      if (nextIndex >= pathTiles.length) break;
+
+      const tile = pathTiles[nextIndex];
+      newPosition = nextIndex;
+      tilesMoved++;
+
+      if (tile.task) {
+        setActiveTask(tile.task);
+        setActiveModal('task');
+        triggered = true;
+        continue;
+      }
+
+      if (tile.item) {
+        collectItem(tile.item, tile.id);
+        triggered = true;
+        continue;
+      }
+
+      if (tile.eventType && Math.random() < tile.eventChance) {
+        triggerEvent(tile);
+        triggered = true;
+        break;
+      }
+    }
+
+    setPlayerPosition(newPosition);
+
+    if (newPosition === lastTile && completedTasks.length >= totalTasks) {
+      setShowLevelComplete(true);
+      setActiveModal('levelComplete');
+      setScore((prev) => prev + currentLevel.scoring.finishReached);
+    }
+
+    return tilesMoved;
+  }
+
+  function triggerEvent(tile) {
+    setAlertMessage(tile.message);
+    setScore((prev) => prev + currentLevel.scoring.eventTriggered);
+    setXP((prev) => prev + 25);
+
+    if (tile.movementPenalty) {
+      setPlayerPosition((prev) => Math.max(prev - tile.movementPenalty, 0));
+    }
+  }
+
+  function goToNextLevel() {
+    if (levelIndex === levels.length - 1) {
+      setShowVictory(true);
+      setActiveModal('victory');
+      return;
+    }
+
+    const nextIndex = levelIndex + 1;
+
+    setLevelIndex(nextIndex);
+    setCompletedTasks([]);
+    setShowLevelComplete(false);
+    setPlayerPosition(0);
+    setInventory([]);
+    setPathTiles(levels[nextIndex].pathTiles);
+    setTimeLeft(levels[nextIndex].timeLimit);
+    setTimerActive(true);
+    setXP((prev) => prev + currentLevel.xpReward);
+    setActiveModal('goal');
+  }
+
+  function collectItem(item, tileId) {
+    setInventory((prev) => [...prev, item]);
+
+    const updatedTiles = pathTiles.map((tile) =>
+      tile.id === tileId ? { ...tile, item: null } : tile
+    );
+    setPathTiles(updatedTiles);
+
+    setFoundItem(item);
+    setScore((prev) => prev + currentLevel.scoring.itemCollected);
+    setActiveModal('item');
+  }
+
+  return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        {alertMessage && (
+          <View style={styles.alertContainer}>
+            <Text style={styles.alertText}>⚠️ Alert </Text>
+            <Text style={styles.alertText}>{alertMessage}</Text>
+          </View>
+        )}
+        {levelingMessage && (
+          <View style={styles.levelingContainer}>
+            <Text style={styles.levelingText}>🎉 Congratulations </Text>
+            <Text style={styles.levelingText}>{levelingMessage}</Text>
+          </View>
+        )}
+
+        <ImageBackground source={currentLevel.background} style={{ flex: 1 }} resizeMode="cover">
+          <Animated.View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              opacity: rainOpacity,
+              pointerEvents: 'none',
+            }}
+          >
+            <Image source={currentLevel.overlay} style={{ width: '100%', height: '100%' }} />
+          </Animated.View>
+
+          <View style={styles.header}>
+            <Text style={styles.headerText}>{currentLevel.name}</Text>
+            <View style={styles.progressBar}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${(completedTasks.length / totalTasks) * 100}%` },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {completedTasks.length} / {totalTasks} tasks completed{' '}
+            </Text>
+          </View>
+
+          <View style={styles.header}>
+            <Text style={styles.headerItem}>⏳ {timeLeft} seconds</Text>
+            <Text style={styles.headerItem}>Score: {score} </Text>
+            <Text style={styles.headerItem}>XP: {xp} </Text>
+            <Text style={styles.headerItem}>Danger Level: {playerLevel}</Text>
+          </View>
+
+          <View style={styles.boardContainer}>
+            <Svg
+              width={width}
+              height={boardHeight}
+              viewBox={`0 0 ${maxX} ${maxY}`}
+              pointerEvents="box-none"
+              style={{ position: 'relative' }}
+            >
+              <Rect x={0} y={0} width={maxX} height={maxY} fill={currentLevel.tintColor} />
+              <TilePath tile_size={tile_size} pathTiles={pathTiles} playerPosition={playerPosition} />
+              <Player
+                x={pathTiles[playerPosition].x}
+                y={pathTiles[playerPosition].y}
+                tile_size={tile_size}
+              />
+              {pathTiles.map(
+                (tile) =>
+                  tile.item && (
+                    <InventoryItem
+                      key={tile.item.id}
+                      x={tile.x}
+                      y={tile.y}
+                      tile_size={tile_size}
+                      icon={tile.item.icon}
+                      onPress={() => collectItem(tile.item, tile.id)}
+                    />
+                  )
+              )}
+            </Svg>
+          </View>
+
+          <View style={styles.bottomContainer}>
+            <Text style={styles.inventoryHeaderText}>Inventory</Text>
+            <View style={styles.inventorySection}>
+              {inventory.map((item) => (
+                <View key={item.id} style={styles.inventorySlot}>
+                  <Text style={styles.inventoryText}>
+                    {item.icon} {item.name}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.diceContainer}>
+              <Text style={{ 
+                fontSize: 40,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.surface, 
+              }}>
+                {isRolling ? `🎲 🎲 🎲 ${diceRoll}` : `🎲 ${diceRoll}`}
+              </Text>
+              <Button title="🎲 Roll" onPress={animateDiceRoll} disabled={isRolling} />
+            </View>
+          </View>
+
+          <IconButton
+            icon="menu"
+            size={25}
+            mode="contained"
+            style={{
+                position: 'absolute',
+                top: theme.spacing.s,
+                right: theme.spacing.s,
+                backgroundColor: theme.colors.surface,
+                borderRadius: theme.radius.m,
+                elevation: 4,
+            }}
+            iconColor={theme.colors.primary}
+            onPress={() => {
+              setActiveModal('menu');
+              setIsPaused(true);
+            }}
+          />
+
+          {/* MODAL MANAGER */}
+          {activeModal === 'instructions' && (
+            <InstructionsModal visible={true} onClose={() => setActiveModal('goal')} />
+          )}
+
+          {activeModal === 'task' && (
+            <TaskModal
+              visible={true}
+              task={activeTask}
+              onClose={() => {
+                setActiveModal(null);
+                if (!activeTask.quiz) {
+                  completeTask(activeTask.id);
+                }
+              }}
+              onStartQuiz={(quiz) => {
+                setActiveQuiz(quiz);
+                setActiveModal('quiz');
+              }}
+            />
+          )}
+
+          {activeModal === 'quiz' && (
+            <QuizModal
+              visible={true}
+              quiz={activeQuiz}
+              onClose={() => setActiveModal(null)}
+              onDone={(passed) => {
+                if (passed) {
+                  completeTask(activeTask.id);
+                }
+                setActiveModal(null);
+              }}
+            />
+          )}
+
+          {activeModal === 'item' && (
+            <ItemModal
+              item={foundItem}
+              onClose={() => {
+                setFoundItem(null);
+                setActiveModal(null);
+              }}
+            />
+          )}
+
+          {activeModal === 'goal' && (
+            <GoalModal
+              visible={true}
+              level={currentLevel}
+              onClose={() => setActiveModal(null)}
+            />
+          )}
+
+          {activeModal === 'levelComplete' && (
+            <LevelComplete
+              visible={true}
+              goToNextLevel={goToNextLevel}
+              levelScore={score}
+              xpGained={xp}
+            />
+          )}
+
+          {activeModal === 'gameOver' && (
+            <GameOver
+              visible={true}
+              startOver={() => {
+                setLevelIndex(0);
+                setPlayerPosition(0);
+                setInventory([]);
+                setCompletedTasks([]);
+                setScore(0);
+                setXP(0);
+                setTimeLeft(levels[0].timeLimit);
+                setPathTiles(levels[0].pathTiles);
+                setShowGameOver(false);
+                setActiveModal('goal');
+              }}
+            />
+          )}
+
+          {activeModal === 'victory' && (
+            <Victory
+              visible={true}
+              startOver={async () => {
+                await resetGame();
+                setLevelIndex(0);
+                setPlayerPosition(0);
+                setInventory([]);
+                setCompletedTasks([]);
+                setScore(0);
+                setXP(0);
+                setTimeLeft(levels[0].timeLimit);
+                setPathTiles(levels[0].pathTiles);
+                setShowVictory(false);
+                setActiveModal('instructions');
+              }}
+              navigation={navigation}
+              levelScore={score}
+              xpGained={xp}
+            />
+          )}
+
+          {activeModal === 'menu' && (
+            <MenuModal
+              visible={true}
+              onDismiss={() => {
+                setActiveModal(null);
+                setIsPaused(false);
+              }}
+              navigation={navigation}
+            />
+          )}
+        </ImageBackground>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -516,16 +690,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
+    borderBottomColor: theme.colors.border,
+    },
   headerItem: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#3D3D3D',
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.accent,
   },
   headerText: {
     fontSize: 20,
@@ -536,88 +710,89 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 12,
-    color: '#3D3D3D'
+    color: '#3D3D3D',
   },
   progressBar: {
-    width: "100%",
+    width: '100%',
     height: 15,
-    backgroundColor: "#ddd",
-    marginTop: 8,
-    borderRadius: 10,
-    overflow: "hidden",
-    marginBottom: 5
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.m,
+    overflow: 'hidden',
+    marginTop: theme.spacing.s,
+    marginBottom: theme.spacing.s,
   },
   scoreText: {
     marginTop: 8,
     fontSize: 12,
-    color: '#3D3D3D'
+    color: '#3D3D3D',
   },
   xpText: {
     marginTop: 8,
     fontSize: 12,
-    color: '#3D3D3D'
+    color: '#3D3D3D',
   },
   progressFill: {
-    height: "100%",
-    backgroundColor: "#4caf50"
+    height: '100%',
+    backgroundColor: theme.colors.border
   },
   bottomContainer: {
-    //flexDirection: 'row',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    //paddingHorizontal: 10,
+    paddingBottom: 20,
   },
   inventorySection: {
     width: '100%',
     paddingVertical: 10,
     paddingHorizontal: 5,
-    backgroundColor: '#ADC4DB',
+    marginBottom: 10,
+    backgroundColor: theme.colors.accent,
     flexDirection: 'row',
     justifyContent: 'center',
     flexWrap: 'wrap',
     borderTopWidth: 2,
-    borderColor: '#ADADDB'
+    borderColor: theme.colors.border,
   },
   inventorySlot: {
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    margin: 5,
+    backgroundColor: theme.colors.surface,
+    paddingVertical: theme.spacing.s,
+    paddingHorizontal: theme.spacing.m,
+    borderRadius: theme.radius.m,
+    margin: theme.spacing.s,
     borderWidth: 1,
-    borderColor: "#B8C4CE",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    borderColor: theme.colors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  elevation: 2,
   },
   inventoryText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#3D3D3D",
+    fontSize: 14,
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.primary,
   },
   inventoryHeaderText: {
     width: '100%',
     fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 10,
+    fontFamily: theme.fonts.semibold,
     textAlign: 'center',
-    backgroundColor: '#ADC4DB'
+    color: theme.colors.primary,
+    paddingVertical: theme.spacing.s,
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border,
   },
   diceContainer: {
     alignItems: 'center',
-    marginVertical: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    padding: 10,
-    borderRadius: 10,
-    marginHorizontal: 20,
-    width: '90%',
+    marginVertical: theme.spacing.s,
+    backgroundColor: 'rgba(160, 178, 193, 0.6)',
+    padding: theme.spacing.l,
+    borderRadius: theme.radius.l,
     borderWidth: 1,
-    borderColor: '#B8C4CE',
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
+    borderColor: theme.colors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
   alertContainer: {
     position: 'absolute',
@@ -631,7 +806,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FFD700',
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
@@ -640,5 +815,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  levelingContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(175, 212, 177, 0.9)',
+    padding: 10,
+    borderRadius: 10,
+    zIndex: 1000,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#b7daa1',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  levelingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#f5f6f3',
   },
 });
