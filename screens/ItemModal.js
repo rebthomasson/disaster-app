@@ -1,30 +1,30 @@
-import { Modal, View, Text, Button } from 'react-native';
+import { Modal, View, Text } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { globalStyles } from '../theme/globalStyles';
 
 export default function ItemModal({ item, onClose }) {
-    if (!item) return null;
+  if (!item) return null;
 
-    return (
-        <Modal visible={true} transparent animationType='fade'>
-            <View style={{
-                flex:1,
-                justifyContent:'center',
-                alignItems:'center',
-                backgroundColor:'rgba(0,0,0,0.5)'
-            }}>
-                <View style={{
-                    backgroundColor: 'lightblue',
-                    padding:20,
-                    borderRadius: 10
-                }}>
-                    <Text style={{fontSize:24, marginBottom:10, alignItems: 'center', fontWeight: 'bold'}}>
-                        {item.name}
-                    </Text>
-                    <Text style={{fontSize:18, marginBottom:10, alignItems: 'center'}}>
-                        {item.info}
-                    </Text>
-                    <Button title='Close' onPress={onClose} />
-                </View>
-            </View>
-        </Modal>
-    );
+  return (
+    <Modal visible={!!item} transparent animationType="fade">
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+      }}>
+        <View style={globalStyles.modalCard}>
+          <Text style={globalStyles.modalTitle}>{item.name}</Text>
+          <Text style={globalStyles.modalBody}>{item.info}</Text>
+
+          <TouchableOpacity
+            style={globalStyles.primaryButton}
+            onPress={onClose}
+          >
+            <Text style={globalStyles.primaryButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
 }

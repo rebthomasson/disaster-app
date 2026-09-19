@@ -5,6 +5,8 @@ import {Card, Text, Avatar, Button, List} from 'react-native-paper';
 import * as Location from 'expo-location';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '../theme/theme';
+import { globalStyles } from '../theme/globalStyles';
 
 const resources = [
   {
@@ -101,8 +103,8 @@ export default function ResourceHub({navigation}) {
       borderColor: '#D32F2F',
     },
     info: {
-      backgroundColor: '#E3F2FD',
-      borderColor: '#1976D2',
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
     },
   }
 
@@ -125,13 +127,13 @@ export default function ResourceHub({navigation}) {
   }
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <MaterialCommunityIcons
             name="shield-alert"
             size={40}
-            color="#fff"
+            color={theme.colors.surface}
           />
           <View style={{marginLeft: 12}}>
             <Text style={styles.title}>Resource Hub</Text>
@@ -185,8 +187,9 @@ export default function ResourceHub({navigation}) {
           >
           <Card.Title
             title={item.title}
+            style={{color: theme.colors.surface}}
             left={(props) => (
-              <Avatar.Icon {...props} icon={item.icon} />
+              <Avatar.Icon {...props} icon={item.icon} style={styles.cardIcon} />
             )}
           />
         </Card>
@@ -198,7 +201,7 @@ export default function ResourceHub({navigation}) {
           <Card.Title
             title="Preparedness Guides"
             left={(props) => (
-              <Avatar.Icon {...props} icon={"bookmark"} />
+              <Avatar.Icon {...props} icon={"bookmark"} style={styles.cardIcon} />
             )}
             right={() => (
               <MaterialCommunityIcons
@@ -208,7 +211,7 @@ export default function ResourceHub({navigation}) {
                     : 'chevron-down'
                 }
                 size={30}
-                color="#777"
+                color={theme.colors.accent}
                 style={{marginRight: 10}}
               />
             )}
@@ -252,7 +255,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    backgroundColor: '#0D47A1',
+    backgroundColor: theme.colors.accent,
     paddingVertical: 16,
     borderRadius: 20,
     alignItems: 'center',
@@ -261,22 +264,28 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 16,
-    fontWeight: 'bold',
+    fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: '#fff',
+    color: theme.colors.surface,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#BBDEFB',
+    color: theme.colors.surface,
+    fontFamily: theme.fonts.medium,
   },
   card: {
     marginBottom: 12,
+    backgroundColor: theme.colors.surface
+  },
+  cardIcon: {
+    backgroundColor: theme.colors.background
   },
   alertCard: {
     marginBottom: 16,
     borderLeftWidth: 6,
     elevation: 4,
+    backgroundColor: theme.colors.border
   },
   alertContent: {
     flexDirection: 'row',

@@ -16,6 +16,8 @@ import FAQs from './screens/FAQScreen';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import FamilyPlan from './screens/FamilyPlan';
+import EmergencyKit from './screens/EmergencyKit';
+import { theme } from './theme/theme';
 
 const Tab = createBottomTabNavigator();
 
@@ -39,6 +41,7 @@ function PrepareScreen() {
     <PrepareStack.Navigator screenOptions={{headerShown: false}}>
       <PrepareStack.Screen name="Prepare" component={Prepare}/>
       <PrepareStack.Screen name="FamilyPlan" component={FamilyPlan}/>
+      <PrepareStack.Screen name="EmergencyKit" component={EmergencyKit}/>
     </PrepareStack.Navigator>
   )
 }
@@ -53,7 +56,7 @@ export default function App() {
               screenOptions={({route}) => ({
                 headerShown: false,
                 tabBarStyle: {backgroundColor: '#fff'},
-                tabBarActiveTintColor: '#1976D2',
+                tabBarActiveTintColor: '#B33951',
                 tabBarInactiveTintColor: '#777',
 
                 tabBarIcon: ({color, size}) => {

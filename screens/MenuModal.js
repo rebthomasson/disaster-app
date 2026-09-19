@@ -24,7 +24,7 @@ export default function MenuModal({visible, onDismiss, navigation}) {
                         </Button>
                         <Button
                           mode="outlined"
-                          onPress={() => {onDismiss(); navigation.navigate('HomeScreen')}}
+                          onPress={() => {onDismiss(); navigation.navigate('Home')}}
                           style={styles.button}
                         >
                           Home

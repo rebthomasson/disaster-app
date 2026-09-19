@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getCompletedGoals } from '../entities/preparednessTracker';
 import { useFocusEffect } from '@react-navigation/native';
 import { prepGoals } from '../entities/preparednessGoals';
+import { theme } from '../theme/theme';
+import { globalStyles } from '../theme/globalStyles';
 
 export default function HomeScreen({navigation}) {
   const preparednessTips = [
@@ -69,7 +71,7 @@ export default function HomeScreen({navigation}) {
   }
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <MaterialCommunityIcons name="home" size={40} color="#fff" />
@@ -80,7 +82,7 @@ export default function HomeScreen({navigation}) {
           <Card.Title
             title="Welcome Back!"
             left={(props) => (
-              <MaterialCommunityIcons name="account-circle" size={40} color="#1976D2" />
+              <MaterialCommunityIcons name="account-circle" size={40} color={theme.colors.accent}/>
             )}
           />
           <Card.Content>
@@ -108,7 +110,7 @@ export default function HomeScreen({navigation}) {
         <Card style={styles.alertCard}>
           <Card.Content>
             <View style={styles.row}>
-              <MaterialCommunityIcons name="alert-octagon" size={40} color="#D32F2F" />
+              <MaterialCommunityIcons name="alert-octagon" size={40} color={theme.colors.border} />
               <View style={{ marginLeft: 12 }}>
                 <Text variant="titleMedium">
                   Local Alerts
@@ -121,15 +123,18 @@ export default function HomeScreen({navigation}) {
             </View>
           </Card.Content>
           <Card.Actions>
-            <Button mode="contained" onPress={() => navigation.navigate('Resources')}>
-              View Alerts
-            </Button>
+            <TouchableOpacity
+              style={globalStyles.primaryButton}
+              onPress={() => navigation.navigate('Resources')}
+            >
+              <Text style={globalStyles.primaryButtonText}>View Alerts</Text>
+            </TouchableOpacity>
           </Card.Actions>
         </Card>
         <Card style={styles.card}>
           <Card.Content>
             <View style={styles.row}>
-              <MaterialCommunityIcons name="gamepad-variant" size={40} color="#1976D2" />
+              <MaterialCommunityIcons name="gamepad-variant" size={40} color={theme.colors.accent} />
               <View style={{ marginLeft: 12 }}>
                 <Text variant="titleMedium">
                   Training Simulation
@@ -150,9 +155,11 @@ export default function HomeScreen({navigation}) {
             </Text>
           </Card.Content>
           <Card.Actions>
-            <Button mode="contained" onPress={() => navigation.navigate('Game', { screen: 'GameBoard' })}>
-              Resume Training
-            </Button>
+            <TouchableOpacity
+              style={globalStyles.primaryButton}
+              onPress={() => navigation.navigate('Game', { screen: 'GameBoard' })}>
+              <Text style={globalStyles.outlineButtonText}>Resume Training</Text>
+            </TouchableOpacity>
           </Card.Actions>
         </Card>
             <Text style={styles.sectionTitle}>
@@ -165,7 +172,7 @@ export default function HomeScreen({navigation}) {
                 onPress={() => navigation.navigate('Resources')}
               >
                 <Card.Content style={styles.gridContent}>
-                  <MaterialCommunityIcons name="shield-alert" size={40} color="#1976D2" />
+                  <MaterialCommunityIcons name="shield-alert" size={40} color={theme.colors.accent} />
                   <Text style={styles.gridItemText}>Resource Hub</Text>
                 </Card.Content>
               </Card>
@@ -175,7 +182,7 @@ export default function HomeScreen({navigation}) {
                 onPress={() => navigation.navigate('Resources', { screen: 'ShelterMaps' })}
               >
                 <Card.Content style={styles.gridContent}>
-                  <MaterialCommunityIcons name="map-marker-radius" size={40} color="#1976D2" />
+                  <MaterialCommunityIcons name="map-marker-radius" size={40} color={theme.colors.accent} />
                   <Text style={styles.gridItemText}>Shelter Maps</Text>
                 </Card.Content>
               </Card>
@@ -185,7 +192,7 @@ export default function HomeScreen({navigation}) {
                 onPress={() => navigation.navigate('Resources', { screen: 'EmergencyContacts' })}
               >
                 <Card.Content style={styles.gridContent}>
-                  <MaterialCommunityIcons name="contacts" size={40} color="#1976D2" />
+                  <MaterialCommunityIcons name="contacts" size={40} color={theme.colors.accent} />
                   <Text style={styles.gridItemText}>Emergency Contacts</Text>
                 </Card.Content>
               </Card>
@@ -194,7 +201,7 @@ export default function HomeScreen({navigation}) {
                 onPress={() => navigation.navigate('Prepare')}
               >
                 <Card.Content style={styles.gridContent}>
-                  <MaterialCommunityIcons name="bag-personal" size={40} color="#1976D2" />
+                  <MaterialCommunityIcons name="bag-personal" size={40} color={theme.colors.accent} />
                   <Text style={styles.gridItemText}>Emergency Kit</Text>
                 </Card.Content>
               </Card>
@@ -208,9 +215,10 @@ export default function HomeScreen({navigation}) {
               <MaterialCommunityIcons
                 name="shield-check"
                 size={32}
-                color="#388E3C"
+                color={theme.colors.accent}
               />
             )}
+            style={{fontFamily: theme.fonts.bold}}
           />
 
           <Card.Content>
@@ -220,16 +228,17 @@ export default function HomeScreen({navigation}) {
 
             <ProgressBar
               progress={progress}
-              style={{marginTop: 10}}
+              color={theme.colors.border}
+              style={{marginTop: 10, fontFamily: theme.fonts.regular}}
             />
 
-            <Text style={{marginTop: 10}}>
+            <Text style={{marginTop: 10, fontFamily: theme.fonts.regular}}>
               {progressPercent}% Prepared
             </Text>
 
             <Text style={{
               marginTop: 10,
-              fontWeight: 'bold'
+              fontFamily: theme.fonts.bold
             }}>
               {getBadge(progressPercent)}
             </Text>
@@ -238,13 +247,14 @@ export default function HomeScreen({navigation}) {
               style={{
                 color: '#666',
                 marginTop: 4,
+                fontFamily: theme.fonts.regular
               }}
             >
               Keep completing preparedness activities
               to unlock new badges.
             </Text>
 
-            <Text style={{marginTop: 10}}>
+            <Text style={{marginTop: 10, fontFamily: theme.fonts.regular}}>
               Next Goals:
             </Text>
 
@@ -273,22 +283,23 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: '#1565C0',
+    backgroundColor: theme.colors.accent,
     borderRadius: 20,
-    padding: 24,
+    padding: theme.spacing.l,
     alignItems: 'center',
     marginBottom: 16,
   },
 
   title: {
-    color: 'white',
+    color: theme.colors.surface,
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: theme.fonts.bold,
     marginTop: 8,
   },
 
   subtitle: {
-    color: '#E3F2FD',
+    color: theme.colors.surface,
+    fontFamily: theme.fonts.medium,
     marginTop: 4,
   },
 
@@ -296,15 +307,23 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderLeftWidth: 6,
     borderLeftColor: '#d32f2f',
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1
   },
 
   card: {
-    marginBottom: 16,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.m,
+      marginVertical: theme.spacing.s,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      elevation: 2,
   },
 
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: theme.fonts.bold,
     marginBottom: 12,
   },
 
@@ -323,6 +342,7 @@ const styles = StyleSheet.create({
   gridCard: {
     width: '48%',
     marginBottom: 12,
+    color: theme.colors.surface
   },
 
   gridContent: {
@@ -332,14 +352,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 16,
     textAlign: 'center',
+    fontFamily: theme.fonts.regular
   },
   progressText: {
     marginTop: 12,
     marginBottom: 4,
+    fontFamily: theme.fonts.regular
   },
 
   tipCard: {
     marginBottom: 24,
     backgroundColor: '#FFF8E1',
+    borderColor: theme.colors.border,
+    borderWidth: 1
   },
 });

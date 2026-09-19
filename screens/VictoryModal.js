@@ -1,8 +1,8 @@
-import { Modal, View, Text, Button } from 'react-native';
+import { Modal, View, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { globalStyles } from '../theme/globalStyles';
 
-export default function LevelComplete({ visible, goToNextLevel, levelScore, xpGained }) {
+export default function Victory({ visible, startOver, navigation, levelScore, xpGained }) {
   if (!visible) return null;
 
   return (
@@ -14,15 +14,22 @@ export default function LevelComplete({ visible, goToNextLevel, levelScore, xpGa
         backgroundColor: 'rgba(0,0,0,0.5)',
       }}>
         <View style={globalStyles.modalCard}>
-          <Text style={globalStyles.modalTitle}>Level Complete!</Text>
+          <Text style={globalStyles.modalTitle}>🎉 You made it through all disasters!</Text>
           <Text style={globalStyles.modalBody}>Score: {levelScore}</Text>
           <Text style={globalStyles.modalBody}>XP gained: {xpGained}</Text>
 
           <TouchableOpacity
             style={globalStyles.primaryButton}
-            onPress={goToNextLevel}
+            onPress={startOver}
           >
-            <Text style={globalStyles.primaryButtonText}>Next Level</Text>
+            <Text style={globalStyles.primaryButtonText}>Start Over</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={globalStyles.outlineButton}
+            onPress={() => navigation.navigate('Home')}
+          >
+            <Text style={globalStyles.outlineButtonText}>Return Home</Text>
           </TouchableOpacity>
         </View>
       </View>
