@@ -18,8 +18,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import FamilyPlan from './screens/FamilyPlan';
 import EmergencyKit from './screens/EmergencyKit';
 import { theme } from './theme/theme';
+import SplashScreen from './screens/SplashScreen';
 
 const Tab = createBottomTabNavigator();
+const RootStack = createStackNavigator();
 
 const ResourceStack = createStackNavigator();
 
@@ -46,70 +48,79 @@ function PrepareScreen() {
   )
 }
 
+function AppTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({route}) => ({
+        headerShown: false,
+        tabBarStyle: {backgroundColor: '#fff'},
+        tabBarActiveTintColor: '#B33951',
+        tabBarInactiveTintColor: '#777',
+
+        tabBarIcon: ({color, size}) => {
+          let iconName;
+
+          if (route.name === 'Game') {
+            iconName = 'gamepad-variant';
+          } else if (route.name === 'Resources') {
+            iconName = 'book-open-page-variant';
+          } else if (route.name === 'Prepare') {
+            iconName = 'bag-personal';
+          } else if (route.name === 'Home') {
+            iconName = 'home';
+          }
+          return (
+            <MaterialCommunityIcons
+              name={iconName}
+              size={size}
+              color={color}
+            />
+          );
+        },
+      })}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: 'Home',
+        }}
+      />
+      <Tab.Screen
+        name="Game"
+        component={GameBoard}
+        options={{
+          tabBarLabel: 'Game',
+        }}
+      />
+      <Tab.Screen
+        name='Resources'
+        component={ResourceScreen}
+        options={{
+          tabBarLabel: 'Resources',
+        }}
+      />
+      <Tab.Screen
+        name='Prepare'
+        component={PrepareScreen}
+        options={{
+          tabBarLabel: 'Prepare',
+        }}
+      />
+    </Tab.Navigator>
+  )
+}
+
 export default function App() {
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
         <PaperProvider>
           <NavigationContainer>
-            <Tab.Navigator
-              screenOptions={({route}) => ({
-                headerShown: false,
-                tabBarStyle: {backgroundColor: '#fff'},
-                tabBarActiveTintColor: '#B33951',
-                tabBarInactiveTintColor: '#777',
-
-                tabBarIcon: ({color, size}) => {
-                  let iconName;
-
-                  if (route.name === 'Game') {
-                    iconName = 'gamepad-variant';
-                  } else if (route.name === 'Resources') {
-                    iconName = 'book-open-page-variant';
-                  } else if (route.name === 'Prepare') {
-                    iconName = 'bag-personal';
-                  } else if (route.name === 'Home') {
-                    iconName = 'home';
-                  }
-                  return (
-                    <MaterialCommunityIcons
-                      name={iconName}
-                      size={size}
-                      color={color}
-                    />
-                  );
-                },
-              })}
-            >
-              <Tab.Screen
-                name="Home"
-                component={HomeScreen}
-                options={{
-                  tabBarLabel: 'Home',
-                }}
-              />
-              <Tab.Screen
-                name="Game"
-                component={GameBoard}
-                options={{
-                  tabBarLabel: 'Game',
-                }}
-              />
-              <Tab.Screen
-                name='Resources'
-                component={ResourceScreen}
-                options={{
-                  tabBarLabel: 'Resources',
-                }}
-              />
-              <Tab.Screen
-                name='Prepare'
-                component={PrepareScreen}
-                options={{
-                  tabBarLabel: 'Prepare',
-                }}
-              />
-            </Tab.Navigator>
+            <RootStack.Navigator screenOptions={{headerShown: false}}>
+              <RootStack.Screen name="Splash" component={SplashScreen} />
+              <RootStack.Screen name="AppTabs" component={AppTabs} />
+            </RootStack.Navigator>
           </NavigationContainer>
         </PaperProvider>
       </SafeAreaProvider>

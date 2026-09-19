@@ -17,13 +17,14 @@ import { Svg, Rect } from 'react-native-svg';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { IconButton } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+//Game entity imports
 import Player from '../entities/Player';
 import TilePath from '../entities/TilePath';
 import InventoryItem from '../entities/InventoryItem';
+//Level data and goal tracker
 import { levels } from '../systems/levels';
 import { completeGoal } from '../entities/preparednessTracker';
-
+//Modals for the Game
 import TaskModal from '../screens/TaskModal';
 import ItemModal from '../screens/ItemModal';
 import QuizModal from '../screens/QuizModal';
@@ -37,6 +38,8 @@ import { theme } from '../theme/theme';
 import { globalStyles } from '../theme/globalStyles';
 
 // Debounced autosave (single instance)
+//Prevents excessive writes to AsyncStorage and app delays
+//Saves 500ms after the last change
 const saveGameDebounced = (() => {
   let timeout = null;
   return (state) => {
@@ -55,6 +58,7 @@ export default function GameBoard() {
   const navigation = useNavigation();
   const { width, height } = useWindowDimensions();
 
+  //Hide the tab bar while on game screen
   useEffect(() => {
     navigation.getParent()?.setOptions({
       tabBarStyle: { display: 'none' },
@@ -69,16 +73,18 @@ export default function GameBoard() {
     };
   }, [navigation]);
 
+  //Board and tile sizing based on the screen dimensions
   const boardHeight = Math.min(height * 0.45, 1000);
   const tile_size = Math.min(width * 0.18, 70);
 
-  // Modal manager: only one modal at a time
+  // Modal manager - only opens and mounts one modal at a time
   const [activeModal, setActiveModal] = useState(null);
 
-  // Core game state
+  // Level and Core game state
   const [levelIndex, setLevelIndex] = useState(0);
   const currentLevel = levels[levelIndex];
 
+  //Early return if level data missing
   if (!currentLevel || !currentLevel.background || !currentLevel.tintColor) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -87,23 +93,26 @@ export default function GameBoard() {
     );
   }
 
+  //TImer and game pause state
   const [timeLeft, setTimeLeft] = useState(currentLevel.timeLimit);
   const [timerActive, setTimerActive] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-
+  //Task and movement state
   const [completedTasks, setCompletedTasks] = useState([]);
   const [playerPosition, setPlayerPosition] = useState(0);
-
+  //Active interactions (task and quiz)
   const [activeTask, setActiveTask] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
 
+  //Level end states
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
-
+  //Inventory and item pick up
   const [inventory, setInventory] = useState([]);
   const [foundItem, setFoundItem] = useState(null);
-
+  //Path tiles for movement
   const [pathTiles, setPathTiles] = useState(currentLevel.pathTiles);
+  //Early return if map is missing
   if (!pathTiles || pathTiles.length === 0) {
     return (
       <SafeAreaView style={styles.header}>
@@ -111,28 +120,31 @@ export default function GameBoard() {
       </SafeAreaView>
     );
   }
-
+  //State to store XP, leveling and scoring 
   const [score, setScore] = useState(0);
   const [xp, setXP] = useState(0);
   const [playerLevel, setPlayerLevel] = useState(1);
-
+  //Alerts in UI for leveling and blockers
   const [alertMessage, setAlertMessage] = useState(null);
   const [levelingMessage, setLevelingMessage] = useState(null);
-
+  //Victory modal
   const [showVictory, setShowVictory] = useState(false);
-
+  //Rain animation overlay for flood level
   const rainOpacity = useRef(new Animated.Value(0.3)).current;
+  //Manages dice roll animation and state
   const [diceRoll, setDiceRoll] = useState(1);
   const [isRolling, setIsRolling] = useState(false);
 
+  //Precomputed values for total tasks and viewbox for SVG
   const totalTasks = pathTiles.filter((tile) => tile.task).length;
   const maxX = Math.max(...pathTiles.map((t) => t.x)) + tile_size;
   const maxY = Math.max(...pathTiles.map((t) => t.y)) + tile_size;
   const lastTile = pathTiles.length - 1;
-
+  //Controls when game is paused if a modal is open or manually paused
   const gamePaused = !!activeModal || isPaused;
 
-  // Focus effect: pause when leaving
+  // Focus effect to pause game when navigating away
+  //Saves the state on screen blur
   useFocusEffect(
     useCallback(() => {
       setIsPaused(false);
@@ -154,14 +166,14 @@ export default function GameBoard() {
     }, [levelIndex, playerPosition, inventory, completedTasks, score, xp, playerLevel, timeLeft, pathTiles])
   );
 
-  // Load saved game
+  // Load saved game on mount
   useEffect(() => {
     async function loadGame() {
       try {
         const saved = await AsyncStorage.getItem('GAME_STATE');
         if (saved) {
           const state = JSON.parse(saved);
-
+          //Restore all state values
           setLevelIndex(state.levelIndex);
           setPlayerPosition(state.playerPosition);
           setInventory(state.inventory);
@@ -172,9 +184,9 @@ export default function GameBoard() {
           setTimeLeft(state.timeLeft);
           setPathTiles(state.pathTiles);
 
-          setActiveModal(null); // resume without intro
+          setActiveModal(null); // resume without intro (skips instructions if returning)
         } else {
-          // first time: show instructions
+          // If it's the first time, show instructions
           setActiveModal('instructions');
         }
       } catch (e) {
@@ -201,7 +213,7 @@ export default function GameBoard() {
     saveGameDebounced(state);
   }, [levelIndex, playerPosition, inventory, completedTasks, score, xp, playerLevel, timeLeft, pathTiles]);
 
-  // AppState save
+  // AppState save when the app goes to the background
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
       if (next !== 'active') {
@@ -222,7 +234,7 @@ export default function GameBoard() {
     return () => sub.remove();
   }, [levelIndex, playerPosition, inventory, completedTasks, score, xp, playerLevel, timeLeft, pathTiles]);
 
-  // Alerts
+  // Temporary alerts that appear in the UI, disappear after 3 seconds
   useEffect(() => {
     if (alertMessage) {
       const timer = setTimeout(() => setAlertMessage(null), 3000);
@@ -230,6 +242,7 @@ export default function GameBoard() {
     }
   }, [alertMessage]);
 
+  //Temporary alerts that appear in the UI, disappear after 3 seconds
   useEffect(() => {
     if (levelingMessage) {
       const timer = setTimeout(() => setLevelingMessage(null), 3000);
@@ -237,7 +250,7 @@ export default function GameBoard() {
     }
   }, [levelingMessage]);
 
-  // Rain animation
+  // Controls the rain animation loop
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -255,7 +268,9 @@ export default function GameBoard() {
     ).start();
   }, [rainOpacity]);
 
-  // XP leveling
+  // XP leveling system
+  //Each level requires the playerLevel * 100 XP
+  //Shows the temporary alert for leveling up
   useEffect(() => {
     const xpLeveling = playerLevel * 100;
     if (xp >= xpLeveling) {
@@ -267,7 +282,9 @@ export default function GameBoard() {
     }
   }, [xp, playerLevel]);
 
-  // Timer
+  // Manages the countdown timer effect
+  //Pauses when the game is paused
+  //Ends the level when the time reaches 0
   useEffect(() => {
     if (gamePaused) {
       setTimerActive(false);
@@ -289,12 +306,13 @@ export default function GameBoard() {
     return () => clearInterval(interval);
   }, [gamePaused]);
 
+  //Handles timer reaching zero
   function handleTimeUp() {
     setTimerActive(false);
     setShowGameOver(true);
     setActiveModal('gameOver');
   }
-
+  //Resets the game state (clears saved game)
   async function resetGame() {
     try {
       await AsyncStorage.removeItem('GAME_STATE');
@@ -303,6 +321,8 @@ export default function GameBoard() {
     }
   }
 
+  //Mark a task as completed
+  //Adds score and XP
   function completeTask(taskId) {
     if (!completedTasks.includes(taskId)) {
       const updated = [...completedTasks, taskId];
@@ -319,14 +339,18 @@ export default function GameBoard() {
     }
   }
 
+  //Dice roll animation to shuffle numbers visually, applies the final roll
+  //to the movement
   function animateDiceRoll() {
     if (isRolling || isPaused || activeModal) return;
     setIsRolling(true);
 
+    //Shuffle animation
     let numberShuffle = setInterval(() => {
       setDiceRoll(Math.floor(Math.random() * 6) + 1);
     }, 100);
 
+    //Final roll
     setTimeout(() => {
       clearInterval(numberShuffle);
 
@@ -338,6 +362,8 @@ export default function GameBoard() {
     }, 1000);
   }
 
+  //Apply the dice roll movement to player position to advance them on the board
+  //Moves tile-by-tile and triggers tasks, items and events
   function rollDice(roll) {
     let newPosition = playerPosition;
     let triggered = false;
@@ -353,19 +379,20 @@ export default function GameBoard() {
       newPosition = nextIndex;
       tilesMoved++;
 
+      //Handles if the player runs into a task tile
       if (tile.task) {
         setActiveTask(tile.task);
         setActiveModal('task');
         triggered = true;
         continue;
       }
-
+      //Handles if the player runs into a item tile
       if (tile.item) {
         collectItem(tile.item, tile.id);
         triggered = true;
         continue;
       }
-
+      //Handles if the player runs into a event tile
       if (tile.eventType && Math.random() < tile.eventChance) {
         triggerEvent(tile);
         triggered = true;
@@ -374,12 +401,13 @@ export default function GameBoard() {
     }
 
     setPlayerPosition(newPosition);
-
+    //Check if the level is complete
     if (newPosition === lastTile && completedTasks.length >= totalTasks) {
       setShowLevelComplete(true);
       setActiveModal('levelComplete');
       setScore((prev) => prev + currentLevel.scoring.finishReached);
 
+      //Check off the preparedness goal trackers once the end of the level has been reached
       if (currentLevel.id === 'flood') completeGoal('floodTraining');
       if (currentLevel.id === 'wildfire') completeGoal('fireTraining');
       if (currentLevel.id === 'earthquake') completeGoal('earthquakeTraining');
@@ -388,6 +416,8 @@ export default function GameBoard() {
     return tilesMoved;
   }
 
+  //Triggers a random event title, show alert message, add score and XP
+  // applies movement penalty if there is one
   function triggerEvent(tile) {
     setAlertMessage(tile.message);
     setScore((prev) => prev + currentLevel.scoring.eventTriggered);
@@ -397,7 +427,7 @@ export default function GameBoard() {
       setPlayerPosition((prev) => Math.max(prev - tile.movementPenalty, 0));
     }
   }
-
+  //Move to the next level, resets state, shows victory modal if last level
   function goToNextLevel() {
     if (levelIndex === levels.length - 1) {
       setShowVictory(true);
@@ -417,9 +447,11 @@ export default function GameBoard() {
     setTimerActive(true);
     setXP((prev) => prev + currentLevel.xpReward);
     setActiveModal('goal');
+    //Navigation back to home
     navigation.navigate('Home', { levelIndex: levelIndex + 1 });
   }
-
+  //Handle collecting a item from an item tile
+  //Adds it to the inventory, removes it from the tile, shows item modal
   function collectItem(item, tileId) {
     setInventory((prev) => [...prev, item]);
 
@@ -432,23 +464,25 @@ export default function GameBoard() {
     setScore((prev) => prev + currentLevel.scoring.itemCollected);
     setActiveModal('item');
   }
-
+  //Render the Game Board UI
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        {/**Temporary alert message */}
         {alertMessage && (
           <View style={styles.alertContainer}>
             <Text style={styles.alertText}>⚠️ Alert </Text>
             <Text style={styles.alertText}>{alertMessage}</Text>
           </View>
         )}
+        {/** Temporary leveling message*/}
         {levelingMessage && (
           <View style={styles.levelingContainer}>
             <Text style={styles.levelingText}>🎉 Congratulations </Text>
             <Text style={styles.levelingText}>{levelingMessage}</Text>
           </View>
         )}
-
+        {/** Image background and overlay for each screen*/}
         <ImageBackground source={currentLevel.background} style={{ flex: 1, backgroundColor: 'transparent' }} resizeMode="cover">
           <Animated.View
             style={{
@@ -463,7 +497,7 @@ export default function GameBoard() {
           >
             <Image source={currentLevel.overlay} style={{ width: '100%', height: '100%', backgroundColor: 'transparent' }} />
           </Animated.View>
-
+          {/**Create the header for the Game Board */}
           <View style={styles.header}>
             <Text style={styles.headerText}>{currentLevel.name}</Text>
             <View style={styles.progressBar}>
@@ -478,14 +512,14 @@ export default function GameBoard() {
               {completedTasks.length} / {totalTasks} tasks completed{' '}
             </Text>
           </View>
-
+          {/** Stats for the level (timer, score, xp, player level*/}
           <View style={styles.header}>
             <Text style={styles.headerItem}>⏳ {timeLeft} seconds</Text>
             <Text style={styles.headerItem}>Score: {score} </Text>
             <Text style={styles.headerItem}>XP: {xp} </Text>
             <Text style={styles.headerItem}>Danger Level: {playerLevel}</Text>
           </View>
-
+          {/** Game Board uses an SVG component to render path/tiles/player, etc.*/}
           <View style={styles.boardContainer}>
             <Svg
               width={width}
@@ -494,14 +528,18 @@ export default function GameBoard() {
               pointerEvents="box-none"
               style={{ position: 'relative' }}
             >
+              {/**Background tint for each level */}
               <Rect x={0} y={0} width={maxX} height={maxY} fill={currentLevel.tintColor} />
+              {/**Render the path tiles for the board */}
               <TilePath tile_size={tile_size} pathTiles={pathTiles} playerPosition={playerPosition} />
+              {/**Create the player avatar and use playerPosition for movement */}
               <Player
                 x={pathTiles[playerPosition].x}
                 y={pathTiles[playerPosition].y}
                 tile_size={tile_size}
                 style={{ zIndex: 999 }}
               />
+              {/** Create the item tiles*/}
               {pathTiles.map(
                 (tile) =>
                   tile.item && (
@@ -517,9 +555,10 @@ export default function GameBoard() {
               )}
             </Svg>
           </View>
-
+          {/** Inventory and dice roll section*/}
           <View style={styles.bottomContainer}>
             <Text style={styles.inventoryHeaderText}>Inventory</Text>
+            {/** List of inventory items once collected*/}
             <View style={styles.inventorySection}>
               {inventory.map((item) => (
                 <View key={item.id} style={styles.inventorySlot}>
@@ -540,7 +579,7 @@ export default function GameBoard() {
               <Button title="🎲 Roll" onPress={animateDiceRoll} disabled={isRolling} />
             </View>
           </View>
-
+          {/**Display the menu button for pausing game, and controlling navigation */}
           <IconButton
             icon="menu"
             size={25}
@@ -562,9 +601,10 @@ export default function GameBoard() {
 
           {/* MODAL MANAGER */}
           {activeModal === 'instructions' && (
+            //Instructions modal
             <InstructionsModal visible={true} onClose={() => setActiveModal('goal')} />
           )}
-
+          {/** Task modal*/}
           {activeModal === 'task' && (
             <TaskModal
               visible={true}
@@ -693,6 +733,8 @@ export default function GameBoard() {
   );
 }
 
+//Styling for the UI components
+//Uses react-native StyleSheet instead of in-line
 const styles = StyleSheet.create({
   boardContainer: {
     flex: 1,

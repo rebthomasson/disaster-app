@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {ScrollView, StyleSheet, View, Linking} from 'react-native';
+import {ScrollView, StyleSheet, View, Linking, TouchableOpacity} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {Card, Text, Avatar, Button, List} from 'react-native-paper';
 import * as Location from 'expo-location';
@@ -26,12 +26,31 @@ const resources = [
   },
 ]
 
+const mockAlerts = [
+  {
+    id: "test-alert-001",
+    properties: {
+      id: "https://api.weather.gov/alerts/",
+      event: "Tornado Warning",
+      severity: "Severe",
+      certainty: "Likely",
+      urgency: "Immediate",
+      headline: "TEST ALERT — Tornado Warning",
+      description: "This is a simulated tornado warning for testing.",
+      instruction: "Seek shelter immediately. This is only a test.",
+      effective: new Date().toISOString(),
+      expires: new Date(Date.now() + 3600000).toISOString(),
+    }
+  }
+]
+
 export default function ResourceHub({navigation}) {
 
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [showGuides, setShowGuides] = useState(false);
+  const [TESTING_MODE, setTestingMode] = useState(false);
 
   useEffect(() => {
     (async() => {
@@ -84,14 +103,25 @@ export default function ResourceHub({navigation}) {
   useEffect(() => {
     if (!location) return;
 
-    fetchLocalAlerts();
+    async function fetchAlertsWrapper() {
+      if(TESTING_MODE) {
+        setAlerts(mockAlerts);
+      } else {
+        setAlerts([]);
+        await fetchLocalAlerts();
+      }
+    }
+
+    fetchAlertsWrapper();
+
+    if (TESTING_MODE) return;
 
     const interval = setInterval(() => {
-      fetchLocalAlerts();
+      fetchAlertsWrapper();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [location]);
+  }, [location, TESTING_MODE]);
 
   const alertStyles = {
     warning: {
@@ -120,9 +150,9 @@ export default function ResourceHub({navigation}) {
   if (!location) {
     //waiting
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text>Getting location...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -142,6 +172,25 @@ export default function ResourceHub({navigation}) {
             </Text>
           </View>
         </View>
+        <TouchableOpacity
+          style={globalStyles.outlineButton}
+          onPress={() => {
+            const newMode = !TESTING_MODE;
+            setTestingMode(newMode);
+
+            if (newMode) {
+              setAlerts(mockAlerts); // inject test alert
+            } else {
+              setAlerts([]);
+              fetchLocalAlerts(); // return to live alerts
+            }
+          }}
+        >
+          <Text style={globalStyles.outlineButtonText}>
+            {TESTING_MODE ? "Disable Testing Mode" : "Enable Testing Mode"}
+          </Text>
+        </TouchableOpacity>
+
         {alerts.length === 0 && (
           <Card style={[styles.alertCard, alertStyles.info]}>
             <Card.Content>
@@ -155,12 +204,13 @@ export default function ResourceHub({navigation}) {
           const event = alert.properties.event;
           const headline = alert.properties.headline;
           const severity = alert.properties.severity;
+          const description = alert.properties.description;
 
           const styleKey =
             severity === 'Severe' ? 'danger' :
             severity === 'Moderate' ? 'warning' :
             'info';
-          
+          console.log("Alert object:", alert);
           return (
             <Card
               key={alert.id}
@@ -171,10 +221,16 @@ export default function ResourceHub({navigation}) {
                 <View style={{marginLeft: 12}}>
                   <Text variant='titleMedium'>{event}</Text>
                   <Text variant='bodySmall'>{headline}</Text>
+                  <Text variant='bodySmall' style={{marginTop: 5}}>{description}</Text>
                 </View>
               </Card.Content>
               <Card.Actions>
-                <Button mode='contained'>Learn More</Button>
+                <TouchableOpacity
+                  style={globalStyles.primaryButton}
+                  onPress={() => Linking.openURL(alert.properties.id)}
+                >
+                  <Text style={globalStyles.primaryButtonText}> Learn More </Text>
+                </TouchableOpacity>
               </Card.Actions>
             </Card>
           )
