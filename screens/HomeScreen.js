@@ -72,6 +72,7 @@ export default function HomeScreen({navigation, route}) {
 
     return '🌱 Beginner';
   }
+  //console.log('NAVIGATION ROUTES:', navigation.getState());
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
@@ -128,7 +129,10 @@ export default function HomeScreen({navigation, route}) {
           <Card.Actions>
             <TouchableOpacity
               style={globalStyles.primaryButton}
-              onPress={() => navigation.navigate('Resources')}
+              onPress={() => navigation.navigate('AppTabs', {
+                screen: 'Resources'
+                })
+              }
             >
               <Text style={globalStyles.primaryButtonText}>View Alerts</Text>
             </TouchableOpacity>
@@ -193,7 +197,11 @@ export default function HomeScreen({navigation, route}) {
 
               <Card
                 style={styles.gridCard}
-                onPress={() => navigation.navigate('Resources', { screen: 'ShelterMaps' })}
+                onPress={() => navigation.navigate('AppTabs', {
+                  screen: 'Resources', 
+                  params: { screen: 'ShelterMaps' }
+                })
+                }
               >
                 <Card.Content style={styles.gridContent}>
                   <MaterialCommunityIcons name="map-marker-radius" size={40} color={theme.colors.accent} />
@@ -203,7 +211,11 @@ export default function HomeScreen({navigation, route}) {
 
               <Card
                 style={styles.gridCard}
-                onPress={() => navigation.navigate('Resources', { screen: 'EmergencyContacts' })}
+                onPress={() => navigation.navigate('AppTabs', {
+                  screen: 'Resources', 
+                  params: { screen: 'EmergencyContacts' }
+                })
+                }
               >
                 <Card.Content style={styles.gridContent}>
                   <MaterialCommunityIcons name="contacts" size={40} color={theme.colors.accent} />
@@ -212,7 +224,11 @@ export default function HomeScreen({navigation, route}) {
               </Card>
               <Card
                 style={styles.gridCard}
-                onPress={() => navigation.navigate('Prepare')}
+                onPress={() => navigation.navigate('AppTabs', {
+                  screen: 'Prepare',
+                  params: { screen: 'EmergencyKit' }
+                })
+                }
               >
                 <Card.Content style={styles.gridContent}>
                   <MaterialCommunityIcons name="bag-personal" size={40} color={theme.colors.accent} />
@@ -367,6 +383,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    color: theme.colors.surface
   },
 
   gridCard: {
@@ -377,6 +394,7 @@ const styles = StyleSheet.create({
 
   gridContent: {
     alignItems: 'center',
+    color: theme.colors.surface
   },
   gridItemText: {
     marginTop: 8,
