@@ -8,44 +8,50 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { completeGoal } from '../entities/preparednessTracker';
 
+//Displays the shelter maps page
 export default function ShelterMaps() {
   const navigation = useNavigation();
+  //User location and FEMA/NWS data
   const [location, setLocation] = useState(null);
   const [zonePolygon, setZonePolygon] = useState([]);
   const [shelters, setShelters] = useState([]);
+  //Selected shelter popup
   const [selectedShelter, setSelectedShelter] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
 
+  //Mark goal as completed once the location loads
   useEffect(() => {
     if (location) {
       completeGoal('shelterMap');
     }
   }, [location]);
 
+  //Fetch the users location, NWS zone and FEMA shelters
   useEffect(() => {
+    //Request location permission on device
     (async () => {
         try {
         let { status } = await Location.requestForegroundPermissionsAsync();
         console.log("Location permission:", status);
 
         if (status !== 'granted') return;
-
+        //Get user coordinates
         let loc = await Location.getCurrentPositionAsync({});
         setLocation(loc);
-
+        //Fetch NWS zone ID
         const zoneId = await getZoneId(loc.coords.latitude, loc.coords.longitude);
         console.log("Zone ID:", zoneId);
-
+        // Fetch zone geometry
         const geometry = await getZoneGeometry(zoneId);
         console.log("Zone geometry:", geometry);
-
+        
         if (geometry && geometry.coordinates) {
             const polygon = convertGeoPolygon(geometry);
             setZonePolygon(polygon);
         } else {
             console.log("No geometry available for this zone");
         }
-
+        //Fetch the FEMA shelter data based on location
         console.log("Calling fetchShelters()");
         const shelterData = await fetchShelters();
         console.log("FEMA shelters:", shelterData.length);
@@ -56,7 +62,7 @@ export default function ShelterMaps() {
         }
     })();
     }, []);
-
+  //Fetch NWS zone ID for the latitude and longitude
   async function getZoneId(lat, lon) {
     const res = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
       headers: {
@@ -67,7 +73,7 @@ export default function ShelterMaps() {
     const data = await res.json();
     return data.properties.forecastZone;
   }
-
+  //Fetch the polygon geometry for the NWS zone
   async function getZoneGeometry(zoneId) {
     const res = await fetch(`https://api.weather.gov/zones/forecast/${zoneId}`, {
       headers: {
@@ -78,22 +84,22 @@ export default function ShelterMaps() {
     const data = await res.json();
     return data.geometry;
   }
-
+  //Fetch any open FEMA shelters from the API
   async function fetchShelters() {
     const url =
         "https://gis.fema.gov/arcgis/rest/services/NSS/OpenShelters/MapServer/0/query" +
         "?where=1%3D1" +
         "&outFields=*" +
-        "&returnGeometry=true" +   // ⭐ REQUIRED
+        "&returnGeometry=true" +  
         "&f=json";
 
     const res = await fetch(url, {
         headers: {
-        "User-Agent": "DisasterPrepApp (rebekah@example.com)"   // ⭐ REQUIRED
+        "User-Agent": "DisasterPrepApp (rebekah@example.com)"
         }
     });
-
-    const text = await res.text();   // ⭐ Read raw text first
+    //Parse manually if the API returns HTML instead of JSON
+    const text = await res.text();   // Readd the raw text first
 
     console.log("RAW FEMA RESPONSE TEXT:", text.slice(0, 200));
 
@@ -111,7 +117,7 @@ export default function ShelterMaps() {
     }
 
     console.log("FEMA features count:", data.features.length);
-
+    //Data normalization for the FEMA shelter fields
     return data.features.map(f => ({
         id: f.attributes.objectid,
         name: f.attributes.shelter_name,
@@ -128,7 +134,7 @@ export default function ShelterMaps() {
     }));
   }
 
-
+  //Convert the NWS polygon coordinates to a Mapview format
   function convertGeoPolygon(geometry) {
     const coords = geometry.coordinates[0];
     return coords.map(([lon, lat]) => ({
@@ -136,13 +142,13 @@ export default function ShelterMaps() {
       longitude: lon
     }));
   }
-
+  //Placeholder evacuation route (developed later)
   const sampleRoute = [
     { latitude: 44.95, longitude: -93.34 },
     { latitude: 44.96, longitude: -93.30 },
     { latitude: 44.98, longitude: -93.28 },
   ];
-
+  //Loading the map (let's the user know what's happening)
   if (!location) {
     return (
       <SafeAreaView>
@@ -170,6 +176,7 @@ export default function ShelterMaps() {
             }}
             onPress={() => navigation.goBack()}
         />
+        {/**Legend to help users understand the map */}
         <IconButton
             icon='information-outline'
             size={30}
@@ -179,6 +186,7 @@ export default function ShelterMaps() {
                 setShowLegend(!showLegend);
             }}
         />
+        {/** Show the legend fields*/}
         {showLegend && (
           <View style={styles.legendContainer}>
             <Text style={styles.legendTitle}>Legend</Text>
@@ -198,6 +206,7 @@ export default function ShelterMaps() {
             </View>
           </View>
         )}
+        {/**Create the main map using mapview component */}
         <MapView
             style={styles.map}
             initialRegion={{
@@ -207,6 +216,7 @@ export default function ShelterMaps() {
                 longitudeDelta: 0.5,
             }}
             >
+              {/**Marks the user's location */}
             <Marker
                 coordinate={{
                 latitude: location.coords.latitude,
@@ -214,7 +224,7 @@ export default function ShelterMaps() {
                 }}
                 title="You are here"
             />
-
+            {/**NWS polygon */}
             {zonePolygon.length > 0 && (
                 <Polygon
                 coordinates={zonePolygon}
@@ -223,12 +233,13 @@ export default function ShelterMaps() {
                 strokeWidth={2}
                 />
             )}
-
+            {/**Example evacuation route */}
             <Polyline
                 coordinates={sampleRoute}
                 strokeColor="red"
                 strokeWidth={4}
             />
+            {/**FEMA shelters */}
             {shelters.map(shelter => (
                 <Marker
                     key={`${shelter.id}-${shelter.latitude}-${shelter.longitude}`}
@@ -245,6 +256,7 @@ export default function ShelterMaps() {
                 </Marker>
             ))}
             </MapView>
+            {/**Shows information about the shelter */}
             {selectedShelter && (
                 <View style={styles.floatingPanel}>
                     <Text style={styles.panelTitle}>{selectedShelter.name}</Text>

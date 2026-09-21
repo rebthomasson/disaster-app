@@ -9,12 +9,16 @@ import { completeGoal } from '../entities/preparednessTracker';
 import { theme } from '../theme/theme';
 import { globalStyles } from '../theme/globalStyles';
 
+//Function to create the emergency contacts page
 export default function EmergencyContacts({navigation}) {
+  //Manages both user-added and default contacts
   const [contacts, setContacts] = useState([]);
+  //State for the form fields for adding a new contact
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [relationship, setRelationship] = useState('');
 
+  //Array to manage local/national emergency numbers, automatically loaded
   const localContacts = [
     {
       id: 'police-non-emergency',
@@ -42,10 +46,12 @@ export default function EmergencyContacts({navigation}) {
     }
   ]
 
+  //Load contacts when first rendered
   useEffect(() => {
     loadContacts();
   }, []);
 
+  //Function to load the saved contacts and merge with default contacts
   async function loadContacts() {
     try {
       const storedContacts = await AsyncStorage.getItem('emergencyContacts');
@@ -69,7 +75,7 @@ export default function EmergencyContacts({navigation}) {
       console.error('Error loading contacts:', error);
     }
   }
-
+  //Function to save updated contact list
   async function saveContacts(updatedContacts) {
     setContacts(updatedContacts);
     try {
@@ -78,10 +84,10 @@ export default function EmergencyContacts({navigation}) {
       console.error('Error saving contacts:', error);
     }
   }
-
+  //Add a new user contact
   async function addContact() {
     if (!name || !phone || !relationship) {
-      alert('Please fill in all fields');
+      alert('Please fill in all fields'); //Makes sure all required fields are filled in
       return;
     }
 
@@ -94,12 +100,13 @@ export default function EmergencyContacts({navigation}) {
 
     const updatedContacts = [...contacts, newContact];
     await saveContacts(updatedContacts);
+    //Reset the form fields
     setName('');
     setPhone('');
     setRelationship('');
     await completeGoal('contacts');
   }
-
+  //Delete a user added contact
   async function deleteContact(id) {
     const updatedContacts = contacts.filter(contact => contact.id !== id);
     await saveContacts(updatedContacts);
@@ -113,6 +120,7 @@ export default function EmergencyContacts({navigation}) {
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}} edges={['top', 'left', 'right']}>
       <ScrollView style={styles.container}>
+        {/**Create the contact screen header */}
         <View style={styles.header}>
           <MaterialCommunityIcons
             name="contacts"
@@ -134,10 +142,10 @@ export default function EmergencyContacts({navigation}) {
               padding: 5,
               elevation: 5,
             }}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.goBack()} //Back to a previous page
           />
         </View>
-
+        {/**Form to add a contact */}
         <Card style={styles.formCard}>
           <Card.Content>
             <Text style={{fontSize: 18, fontFamily: theme.fonts.bold, color: theme.colors.surface, paddingBottom: 10}}>Add Contact</Text>
@@ -168,7 +176,7 @@ export default function EmergencyContacts({navigation}) {
             </TouchableOpacity>
           </Card.Content>
         </Card>
-
+        {/**Render the built-in emergency contacts */}
         <Text style={styles.contactsHeader}>Local Emergency Contacts</Text>
         {contacts
           .filter(c => c.relationship === 'Local Services' || c.relationship==='National Services')
@@ -181,13 +189,13 @@ export default function EmergencyContacts({navigation}) {
               <Card.Actions>
                 <IconButton
                   icon="phone"
-                  onPress={() => callContact(contact.phone)}
+                  onPress={() => callContact(contact.phone)} //Allows users to actually call a contact
                 />
               </Card.Actions>
             </Card>
           ))
         }
-
+        {/** Display the user added contacts*/}
         <Text style={styles.contactsHeader}>Your Emergency Contacts</Text>
         {contacts
           .filter(c => !localContacts.some(d => d.id === c.id))
@@ -215,6 +223,7 @@ export default function EmergencyContacts({navigation}) {
   );
 }
 
+//Styling for the UI for contacts
 const styles = StyleSheet.create({
   container: {
     flex: 1,

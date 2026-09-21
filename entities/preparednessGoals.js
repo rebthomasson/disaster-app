@@ -1,3 +1,5 @@
+//Array to track all of the preparedness goals across the app
+//Can be used by all screens
 export const prepGoals = [
   {
     id: 'contacts',

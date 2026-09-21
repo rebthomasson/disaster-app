@@ -8,6 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { prepGoals } from '../entities/preparednessGoals';
 import { theme } from '../theme/theme';
 
+//Cars for the different screens 
 const prepareItems = [
   {
     title: 'Emergency Kit Checklist',
@@ -21,19 +22,20 @@ const prepareItems = [
   },
 ]
 
+//Render the prepare screen
 export default function Prepare({navigation}) {
-
+  //State for tracking preparedness progress and goals
   const [completedGoals, setCompletedGoals] = useState([]);
   const [showGoals, setShowGoals] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
   const [faqProgress, setFAQProgress] = useState(0);
-
+  //Reloads goals when the screen is in focus
   useFocusEffect(
     useCallback(() => {
       loadGoals();
     }, [])
   );
-
+  //Function to fetch/load goals 
   async function  loadGoals() {
     try {
       const goals = await getCompletedGoals();
@@ -45,14 +47,14 @@ export default function Prepare({navigation}) {
       console.error('Failed to load goals');
     }
   }
-
+  //Calculates the percentage prepared for user
   const progressFrac = 
     prepGoals.length > 0
     ? completedGoals.length / prepGoals.length
     : 0;
 
   const progress = Math.round(progressFrac * 100);
-
+  //Calculate badge based on preparedness percentage
   function getBadge(progress) {
     if (progress >= 100) {
       return '🏆 Disaster Ready';
@@ -92,6 +94,7 @@ export default function Prepare({navigation}) {
             </Text>
           </Card.Content>
         </Card>
+        {/**Navigation cars for the preparedness tools */}
         {prepareItems.map((item) => (
             <Card
               key={item.title}
@@ -110,6 +113,7 @@ export default function Prepare({navigation}) {
           style={styles.card}
           onPress={() => setShowGoals(!showGoals)}
         >
+          {/**Preparedness goals section */}
           <Card.Title
             title={`Preparedness Goals (${completedGoals.length}/${prepGoals.length})`}
             left={(props) => (
@@ -128,6 +132,7 @@ export default function Prepare({navigation}) {
               />
             )}
           />
+          {/**Expandable list of goals */}
           {showGoals && (
             <Card.Content>
               {prepGoals.map(goal => (
@@ -161,7 +166,7 @@ export default function Prepare({navigation}) {
             </Card.Content>
           )}
         </Card>
-        
+        {/**Progress section */}
         <Card 
           style={styles.card}
           onPress={() => setShowProgress(!showProgress)}
@@ -184,6 +189,7 @@ export default function Prepare({navigation}) {
               />
             )}
           />
+          {/** Expandable progress details*/}
           {showProgress && (
             <Card.Content>
               <Text style={{marginBottom: 10, fontFamily: theme.fonts.regular}}>

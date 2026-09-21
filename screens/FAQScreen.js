@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { readFAQ } from '../entities/preparednessTracker';
 import { theme } from '../theme/theme';
 
+//Array to manage the FAQ categories, questions and answers
 const faqs = [
   {
     category: 'Emergency Kits',
@@ -95,6 +96,7 @@ const faqs = [
   }
 ];
 
+//Function to create the FAQ page
 export default function FAQs({navigation}) {
   useEffect(() => {
 
@@ -122,8 +124,9 @@ export default function FAQs({navigation}) {
               padding: 5,
               elevation: 5,
             }}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.goBack()} //Return to resource hub
           />
+          {/**Header for the FAQ page */}
           <View style={{marginLeft: 12}}>
             <Text style={styles.title}>
               Disaster FAQs
@@ -143,7 +146,9 @@ export default function FAQs({navigation}) {
             </Text>
           </Card.Content>
         </Card>
+        {/**Creates a list section using react-native-paper component for FAQ questions */}
         <List.Section>
+          {/** Maps the category to section headers*/}
           {faqs.map(category => (
             <List.Accordion
               key={category.category}
@@ -157,13 +162,14 @@ export default function FAQs({navigation}) {
               )}
               style={{flexWrap: 'wrap'}}
             >
+              {/** Maps the questions to a list.accordion component*/}
               {category.questions.map(q => (
                 <List.Accordion
                   key={q.question}
                   title={q.question}
                   titleNumberOfLines={3}
                   onPress={() => 
-                    readFAQ(`${category.category}-${q.question}`)
+                    readFAQ(`${category.category}-${q.question}`) //Mark the FAQ as read
               }
                 >
                   <View style={styles.answer}>

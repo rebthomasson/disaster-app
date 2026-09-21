@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../theme/theme';
 import { globalStyles } from '../theme/globalStyles';
 
+//Function to render the family communication plan screen
 export default function FamilyPlan({navigation}) {
   const [familyName, setFamilyName] = useState('');
   const [meetingPlaceNearby, setMeetingPlaceNearby] = useState('');
@@ -16,9 +17,10 @@ export default function FamilyPlan({navigation}) {
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState({});
 
+  //Form validation for the family plan
   function validateForm() {
     const newErrors = {};
-
+    //If left blank, show an error to let the user know its a required element
     if (!familyName.trim()) {
       newErrors.familyName = 'Family name is required';
     }
@@ -39,7 +41,7 @@ export default function FamilyPlan({navigation}) {
 
     return Object.keys(newErrors).length === 0;
   }
-
+  //Async function to save the plan
   async function savePlan(plan) {
     try {
       await AsyncStorage.setItem(
@@ -50,7 +52,7 @@ export default function FamilyPlan({navigation}) {
       console.error(error);
     }
   }
-
+  //Async function to load the family plan when mounted
   async function loadPlan() {
     try {
       const savedPlan = await AsyncStorage.getItem(
@@ -66,7 +68,7 @@ export default function FamilyPlan({navigation}) {
       console.error(error);
     }
   }
-
+  
   useEffect(() => {
     async function loadSavedPlan() {
       const plan = await loadPlan();

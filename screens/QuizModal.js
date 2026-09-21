@@ -2,6 +2,7 @@ import { Modal, View, Text, TouchableOpacity } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import { theme } from '../theme/theme';
 
+//Create the quiz modal for special quiz tasks
 export default function QuizModal({ visible, quiz, onClose, onDone}) {
     const [index, setIndex] = useState(0);
     const [selected, setSelected] = useState(null);
