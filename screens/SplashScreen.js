@@ -3,6 +3,7 @@ import {View, Text, Animated, StyleSheet} from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { theme } from '../theme/theme';
 
+//Create the splash screen when it mounts
 export default function SplashScreen({navigation}) {
   const fade = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.85)).current; //Logo starts smaller
@@ -51,6 +52,8 @@ export default function SplashScreen({navigation}) {
   );
 }
 
+//Create the styling for the splash screen
+//Makes use of the global theme colors and spacing
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Modal, View, Text, Button, StyleSheet, ScrollView } from 'react-native';
+import { theme } from '../theme/theme';
 
+//Instructions modal to show the users how to play the game on first visit
 export default function InstructionsModal({ onClose, visible, level }) {
     if (!visible) {
         return null;
@@ -14,15 +16,17 @@ export default function InstructionsModal({ onClose, visible, level }) {
                 backgroundColor:'rgba(0,0,0,0.5)'
             }}>
                 <View style={{
-                    backgroundColor: 'lightblue',
+                    backgroundColor: theme.colors.accent,
                     padding:20,
                     borderRadius: 10,
                     width: '80%'
                 }}>
+                  {/**Makes the modal scrollable */}
                   <ScrollView contentContainerStyle={{paddingBottom: 20}}>
                       <Text style={styles.title}>
                           How to Play
                       </Text>
+                      {/**Instructions for the game divided into sections */}
                       <Text style={styles.sectionTitle}>🎯 Goal</Text>
                       <Text style={styles.text}>
                           Move through the disaster zone, complete tasks, collect items, and reach the finish tile before time runs out.
@@ -76,16 +80,19 @@ export default function InstructionsModal({ onClose, visible, level }) {
     );
 }
 
+//UI styling to use global themes
 const styles= StyleSheet.create({
     title: {
         fontSize: 26,
-        fontWeight: 'bold',
+        fontFamily: theme.fonts.bold,
+        color: theme.colors.surface,
         textAlign: 'center',
         marginBottom: 20,
     },
     sectionTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
+        fontFamily: theme.fonts.bold,
+        color: theme.colors.surface,
         marginTop: 15,
         marginBottom: 5,
     },
@@ -93,5 +100,7 @@ const styles= StyleSheet.create({
         fontSize: 16,
         marginBottom: 10,
         lineHeight: 22,
+        fontFamily: theme.fonts.regular,
+        color: theme.colors.surface,
     },
 })

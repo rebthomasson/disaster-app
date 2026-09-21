@@ -4,6 +4,8 @@ import {View, StyleSheet, TouchableOpacity} from 'react-native';
 import { theme } from '../theme/theme';
 import { globalStyles } from '../theme/globalStyles';
 
+//Modal to display the in-game menu when they're playing the board game
+//Imports variables from gameboard to manage state
 export default function MenuModal({
   visible, 
   onDismiss, 
@@ -20,12 +22,14 @@ export default function MenuModal({
   levels
 }) {
     return (
+        //Uses the react-native-paper portal component for the menu
         <Portal>
             <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={styles.modalContainer}>
               <View style={globalStyles.modalCard}>
                 <Text style={globalStyles.modalTitle}>
                     Menu
                 </Text>
+                {/** Add buttons to resume the game, go to resource hub or back to homescreen*/}
                 <TouchableOpacity
                   style={globalStyles.primaryButton}
                   onPress={() => {onDismiss()}}
@@ -44,6 +48,7 @@ export default function MenuModal({
                   >
                     <Text style={globalStyles.outlineButtonText}>Home</Text>
                   </TouchableOpacity>
+                  {/**Button to reset the game to completely wipe game state */}
                   <TouchableOpacity
                     style={globalStyles.outlineButton}
                     title="Reset Game State"
@@ -56,7 +61,7 @@ export default function MenuModal({
                       setXP(0);
                       setTimeLeft(levels[0].timeLimit);
                       setPathTiles(levels[0].pathTiles);
-                      resetPreparedness();
+                      resetPreparedness(); //Reset the preparedness goals
                     }}
                   >
                     <Text style={globalStyles.outlineButtonText}> Reset Game </Text>

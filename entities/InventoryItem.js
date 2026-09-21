@@ -1,6 +1,7 @@
 import { Text } from "react-native-svg";
 import React from "react";
-
+//Function for rendering inventory items
+//Displays the inventory item icon on the assigned tile
 export default function InventoryItem({ x, y, tile_size, icon, onPress }) {
 
     return (
@@ -11,7 +12,7 @@ export default function InventoryItem({ x, y, tile_size, icon, onPress }) {
             fill="white"
             textAnchor="middle"
             alignmentBaseline="middle"
-            onPress={onPress}
+            onPress={onPress} //On press, collects the item (GameBoard)
         >
             {icon}
         </Text>

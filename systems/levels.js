@@ -335,13 +335,13 @@ export const levels = [
                 rock: {
                     eventChance: 0.6,
                     eventType: 'burn',
-                    message: "You were hurt by the fire! You have to find a way to put it out.",
+                    message: "You were trapped by fallen rocks! You have to escape before continuing.",
                     movementPenalty: 2,
                 },
                 rubble: {
                     eventChance: 0.7,
                     eventType: 'slowdown',
-                    message: "You got caught in the smoke, and had to wait for it to clear!",
+                    message: "You had to navigate around the rubble!",
                     movementPenalty: 3
                 },
                 debris: {

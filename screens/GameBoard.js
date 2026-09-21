@@ -234,6 +234,10 @@ export default function GameBoard() {
     return () => sub.remove();
   }, [levelIndex, playerPosition, inventory, completedTasks, score, xp, playerLevel, timeLeft, pathTiles]);
 
+    useEffect(() => {
+      AsyncStorage.setItem('levelIndex', levelIndex.toString());
+    }, [levelIndex]);
+
   // Temporary alerts that appear in the UI, disappear after 3 seconds
   useEffect(() => {
     if (alertMessage) {
@@ -447,8 +451,6 @@ export default function GameBoard() {
     setTimerActive(true);
     setXP((prev) => prev + currentLevel.xpReward);
     setActiveModal('goal');
-    //Navigation back to home
-    navigation.navigate('Home', { levelIndex: levelIndex + 1 });
   }
   //Handle collecting a item from an item tile
   //Adds it to the inventory, removes it from the tile, shows item modal

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,8 +10,10 @@ import { prepGoals } from '../entities/preparednessGoals';
 import { theme } from '../theme/theme';
 import { globalStyles } from '../theme/globalStyles';
 import { levels } from '../systems/levels';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function HomeScreen({navigation, route}) {
+export default function HomeScreen({navigation}) {
+  //Array for rotating preparedness "tip of the day"
   const preparednessTips = [
     "Store at least one gallon of water per person per day for three days.",
     "Keep a flashlight and extra batteries in your emergency kit.",
@@ -23,16 +25,16 @@ export default function HomeScreen({navigation, route}) {
     "Have a backup phone charger or power bank available.",
   ];
 
-  const levelIndex = route.params?.levelIndex ?? 0;
-
-  const today = new Date();
-
+  //Gets a new daily tip baseed on the date
+  const today = new Date(); //Get today's date
+  //Calculate the index of the tips
   const tipIndex = Math.floor(today.getTime() / (1000 * 60 * 60 * 24)) % preparednessTips.length;
 
   const dailyTip = preparednessTips[tipIndex];
-  
+  //Tracks the completed preparedness goals
   const [completedGoals, setCompletedGoals] = useState([]);
 
+  //Load completed goals when the screen comes into focus
   async function  loadGoals() {
     try {
       const goals = await getCompletedGoals();
@@ -48,11 +50,22 @@ export default function HomeScreen({navigation, route}) {
       loadGoals();
     }, [])
   );
+  //Get the current level index which is loaded from AsyncStorage
+  const [levelIndex, setLevelIndex] = useState(0);
+  // Load the saved level when the HomeScreen mounts
+  useEffect(() => {
+    AsyncStorage.getItem('levelIndex').then((value) => {
+      const index = Number(value);
+      if (!isNaN(index)) {
+        setLevelIndex(index);
+      }
+    });
+  }, []);
   
+  //Preparedness goals progress (completed vs total goals)
   const progress = completedGoals.length / prepGoals.length;
-
   const progressPercent = Math.round(progress * 100);
-
+  //Get the right badge based on progress gaoals percentage
   function getBadge(progress) {
     if (progress >= 100) {
       return '🏆 Disaster Ready';
@@ -75,6 +88,7 @@ export default function HomeScreen({navigation, route}) {
   //console.log('NAVIGATION ROUTES:', navigation.getState());
 
   return (
+    //Render the UI for the HomeScreen
     <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
@@ -82,6 +96,7 @@ export default function HomeScreen({navigation, route}) {
           <Text style={styles.title}>Disaster Declassified</Text>
           <Text style={styles.subtitle}>Your guide to disaster preparedness</Text>
         </View>
+        {/** Welcome back card for home screen*/}
         <Card style={styles.card}>
           <Card.Title
             title="Welcome Back!"
@@ -95,7 +110,7 @@ export default function HomeScreen({navigation, route}) {
             </Text>
           </Card.Content>
         </Card>
-        {/* Preparedness Tip */}
+        {/* Preparedness Tip Card */}
         <Card style={styles.tipCard}>
           <Card.Content>
              <View style={styles.row}>
@@ -111,6 +126,7 @@ export default function HomeScreen({navigation, route}) {
             </View>
           </Card.Content>
         </Card>
+        {/**Local alerts card */}
         <Card style={styles.alertCard}>
           <Card.Content>
             <View style={styles.row}>
@@ -138,6 +154,7 @@ export default function HomeScreen({navigation, route}) {
             </TouchableOpacity>
           </Card.Actions>
         </Card>
+        {/**Training card for the game levels */}
         <Card style={styles.card}>
           <Card.Content>
             <View style={styles.row}>
@@ -153,12 +170,13 @@ export default function HomeScreen({navigation, route}) {
               </View>
             </View>
           </Card.Content>
+          {/** Current level styling using AsyncStorage*/}
           <Card.Content>
             <Text style={styles.cardLabel}>Level:</Text>
             <Text style={styles.cardValue}>
               {levels[levelIndex].name}
             </Text>
-
+            {/** Checks off the levels once they have been completed*/}  
             <Text style={[styles.cardLabel, { marginTop: theme.spacing.s }]}>
               Progress:
             </Text>
@@ -172,6 +190,7 @@ export default function HomeScreen({navigation, route}) {
               {completedGoals.includes('earthquakeTraining') ? '✓ Earthquake Training' : '• Earthquake Training'}
             </Text>
           </Card.Content>
+          {/** Button to resume the game */}
           <Card.Actions>
             <TouchableOpacity
               style={globalStyles.primaryButton}
@@ -180,6 +199,7 @@ export default function HomeScreen({navigation, route}) {
             </TouchableOpacity>
           </Card.Actions>
         </Card>
+        {/**Quick access section (emergency kit, contacts, resource hub, prepare page) */}
             <Text style={styles.sectionTitle}>
               Quick Access
             </Text>
@@ -237,7 +257,7 @@ export default function HomeScreen({navigation, route}) {
               </Card>
             </View>
 
-        {/* Preparedness Progress */}
+        {/* Preparedness Progress Section */}
         <Card style={styles.card}>
           <Card.Title
             title="Preparedness Progress"
@@ -250,7 +270,7 @@ export default function HomeScreen({navigation, route}) {
             )}
             style={{fontFamily: theme.fonts.bold}}
           />
-
+          {/**Track the preparedness goals using progress bar */}
           <Card.Content>
             <Text style={styles.progressText}>
               {completedGoals.length} / {prepGoals.length} goals completed
@@ -270,6 +290,7 @@ export default function HomeScreen({navigation, route}) {
               marginTop: 10,
               fontFamily: theme.fonts.bold
             }}>
+              {/** Show the badge they've unlocked for completing goals*/}
               {getBadge(progressPercent)}
             </Text>
 
@@ -306,6 +327,7 @@ export default function HomeScreen({navigation, route}) {
   );
 }
 
+//Styling for the home screen using React Stylesheet
 const styles = StyleSheet.create({
   container: {
     padding: 16,

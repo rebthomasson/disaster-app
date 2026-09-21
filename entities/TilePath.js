@@ -1,6 +1,8 @@
 import {Rect, G, Text, Path} from 'react-native-svg';
 import React from 'react';
 
+//Array to keep track of styling for the different types of terrain
+//Adds a color and icon to each of the special tiles
 const terrainStyles = {
     "mud": {
         fill: "#795548",
@@ -38,6 +40,8 @@ const terrainStyles = {
     }
 };
 
+//Function renders the path of the game board for each of the levels
+//Also created the curved connections between the tiles
 export default function TilePath({
     tile_size,
     pathTiles,
@@ -45,13 +49,14 @@ export default function TilePath({
 }) {
     return (
     <>
+    {/**Creates a curved path connections between each tile */}
         {pathTiles.map((tile, index) => {
-            if (index === 0) return null;
+            if (index === 0) return null; //First tile has no previous tile
 
             const prev = pathTiles[index - 1];
 
             let px, py, cx, cy;
-
+            //Determine the start and end points based on how tiles are aligned
             if (prev.y === tile.y) {
                 // Horizontal line
                 px = tile.x > prev.x ? prev.x + tile_size : prev.x;
@@ -80,12 +85,12 @@ export default function TilePath({
             const dx = cx - px;
             const dy = cy - py;
 
-            // Curve strength (tweak this!)
+            // Curve strength 
             const curve = 20;
 
             const distance = Math.max(Math.sqrt(dx*dx + dy*dy), 1); // Prevent division by zero
 
-            // Control point: perpendicular to the line
+            // Control point: perpendicular to the line (this creates the curve)
             const qx = mx - dy * (curve / distance);
             const qy = my + dx * (curve / distance);
 
@@ -99,6 +104,7 @@ export default function TilePath({
                 />
             );
         })}
+        {/**Maps out the tiles using SVG rect objects */}
         {pathTiles.map((tile, index) => {
             const style = terrainStyles[tile.terrain] || terrainStyles["default"];
             const isPlayerTile = index === playerPosition;
@@ -113,10 +119,11 @@ export default function TilePath({
                     y={tile.y}
                     width={tile_size}
                     height={tile_size}
-                    stroke={isPlayerTile ? "#FFD700" : "black"}
+                    stroke={isPlayerTile ? "#FFD700" : "black"} //Highlihgt the player tile
                     strokeWidth="2"
                     fill={style.fill}
                     />
+                    {/**Display the terrain icon if there is one */}
                     {tileIcon && (
                         <Text
                             x={tile.x + tile_size/2}

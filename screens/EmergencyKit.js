@@ -1,14 +1,18 @@
-import React, {useState, useEffect} from 'react';
+//Imports for the emergency kit screen
+import React, {useState, useEffect, use} from 'react';
 import { Checkbox, Text, Card, ProgressBar, IconButton, Avatar, Divider } from 'react-native-paper';
 import {View, StyleSheet, ScrollView} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../theme/theme';
+import { completeGoal } from '../entities/preparednessTracker';
 
+//Function to render the emergency kit builder screen
 export default function EmergencyKit({navigation}) {
+  //Tracks which kit items have been checked off
   const [checkedItems, setCheckedItems] = useState([]);
-
+  //Array to maange emergency items in the checklist and their categories
   const emergencyItems = {
     nutritional: [
       {id: 'water', label: 'One gallon per person per day for at least 3 days'},
@@ -44,14 +48,14 @@ export default function EmergencyKit({navigation}) {
       {id: 'paper and pencil', label: 'Paper and pencil'}
     ],
   }
-
+  //Icons for each of the categories
   const categoryIcons = {
     nutritional: 'food-apple',
     tools: 'toolbox-outline',
     medical: 'medical-bag',
     miscellaneous: 'package-variant-closed'
   }
-
+  //Toggle a single item in/out of the checklist
   function toggleItems(id) {
     if (checkedItems.includes(id)) {
       setCheckedItems(
@@ -61,21 +65,28 @@ export default function EmergencyKit({navigation}) {
       setCheckedItems([...checkedItems, id]);
     }
   }
-
+  //Keeps track of the total items across all categories
   const totalItems = Object.values(emergencyItems)
     .flat()
     .length;
-
+  //Keeps track of the completion percentage for kit
   const progress = checkedItems.length / totalItems;
-
+  //Load the saved kit progress
   useEffect(() => {
     AsyncStorage.getItem('checkedItems').then(data => {
       if (data) setCheckedItems(JSON.parse(data));
     });
   }, []);
-
+  //Persist kit progress whenever items change
   useEffect(() => {
     AsyncStorage.setItem('checkedItems', JSON.stringify(checkedItems));
+  }, [checkedItems]);
+
+  //Marks the emergency kit goal as completed when all items are checked off
+  useEffect(() => {
+    if (checkedItems.length === totalItems) {
+      completeGoal('kit');
+    }
   }, [checkedItems]);
 
   return (
@@ -97,9 +108,10 @@ export default function EmergencyKit({navigation}) {
               padding: 5,
               elevation: 5,
             }}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.goBack()} //Go back to the previous screen
           />
         </View>
+        {/** Info card*/}
         <Card style={styles.infoCard}>
           <Card.Content>
             <Text style={{fontFamily: theme.fonts.bold, fontSize: 16, paddingBottom: 10}}>
@@ -114,6 +126,7 @@ export default function EmergencyKit({navigation}) {
             </Text>
           </Card.Content>
         </Card>
+        {/**Category sections */}
         {Object.entries(emergencyItems).map(([category, items]) => (
           <Card key={category} style={styles.card}>
             <Card.Title
@@ -123,6 +136,7 @@ export default function EmergencyKit({navigation}) {
               )}
             />
             <Card.Content>
+              {/**Map the items to each checkbox */}
               {items.map((item, index) => (
                 <View key={item.id}>
                   <View style={styles.itemRow}>
@@ -146,6 +160,7 @@ export default function EmergencyKit({navigation}) {
   )
 }
 
+//Styling for the emergency kit UI
 const styles = StyleSheet.create({
   container: {
     padding: 16,

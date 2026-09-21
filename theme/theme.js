@@ -1,3 +1,4 @@
+//Manages the color palette, fonts, and spacing for the app
 export const theme = {
   colors: {
     primary: '#896279',

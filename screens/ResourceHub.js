@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme/theme';
 import { globalStyles } from '../theme/globalStyles';
 
+//Array for the resource hub for different screen links
 const resources = [
   {
     title: 'Disaster Shelter Maps',
@@ -26,6 +27,7 @@ const resources = [
   },
 ]
 
+//Creates a mock alert to simulate a tornado warning for testing the feature
 const mockAlerts = [
   {
     id: "test-alert-001",
@@ -44,14 +46,16 @@ const mockAlerts = [
   }
 ]
 
+//Function for creating the resource hub screen
 export default function ResourceHub({navigation}) {
 
+  //State management
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [showGuides, setShowGuides] = useState(false);
   const [TESTING_MODE, setTestingMode] = useState(false);
-
+  //Requests users location permission and fetches location if granted
   useEffect(() => {
     (async() => {
       let {status} = await Location.requestForegroundPermissionsAsync();
@@ -64,7 +68,7 @@ export default function ResourceHub({navigation}) {
       setLocation(loc);
     })();
   }, []);
-
+  //Fetch the NWS zone from user's coordinates
   async function getNWSZone(lat, lon) {
     const response = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
       headers: {
@@ -76,7 +80,7 @@ export default function ResourceHub({navigation}) {
     const data = await response.json();
     return data.properties.forecastZone;
   }
-
+  //Fetches the active alerts for a given NWS zone
   async function getAlerts(zoneId) {
     const response = await fetch(`https://api.weather.gov/alerts/active?zone=${zoneId}`, {
       headers: {
@@ -88,7 +92,7 @@ export default function ResourceHub({navigation}) {
     const data = await response.json();
     return data.features;
   }
-
+  //Fetch alerts based on the user's location
   async function fetchLocalAlerts() {
     if (!location) return;
 
@@ -99,22 +103,22 @@ export default function ResourceHub({navigation}) {
 
     setAlerts(alerts);
   }
-
+  //Suto-refreshes the alerts every 30 secs when testing mode isn't enabled
   useEffect(() => {
     if (!location) return;
 
     async function fetchAlertsWrapper() {
       if(TESTING_MODE) {
-        setAlerts(mockAlerts);
+        setAlerts(mockAlerts); //Use mock data in testing mode
       } else {
-        setAlerts([]);
-        await fetchLocalAlerts();
+        setAlerts([]); //Clears the old alerts
+        await fetchLocalAlerts(); 
       }
     }
 
     fetchAlertsWrapper();
 
-    if (TESTING_MODE) return;
+    if (TESTING_MODE) return; //Skips the interval when testing mode
 
     const interval = setInterval(() => {
       fetchAlertsWrapper();
@@ -122,7 +126,7 @@ export default function ResourceHub({navigation}) {
 
     return () => clearInterval(interval);
   }, [location, TESTING_MODE]);
-
+  //Styles for active alerts and different severity levels
   const alertStyles = {
     warning: {
       backgroundColor: '#FFF4E5',
@@ -137,7 +141,7 @@ export default function ResourceHub({navigation}) {
       borderColor: theme.colors.border,
     },
   }
-
+  //Error state when location is denied
   if (errorMsg !== null) {
     //There's been an error
     return (
@@ -172,6 +176,7 @@ export default function ResourceHub({navigation}) {
             </Text>
           </View>
         </View>
+        {/** Testing mode toggle*/}
         <TouchableOpacity
           style={globalStyles.outlineButton}
           onPress={() => {
@@ -179,7 +184,7 @@ export default function ResourceHub({navigation}) {
             setTestingMode(newMode);
 
             if (newMode) {
-              setAlerts(mockAlerts); // inject test alert
+              setAlerts(mockAlerts); // enable a test alert
             } else {
               setAlerts([]);
               fetchLocalAlerts(); // return to live alerts
@@ -235,6 +240,7 @@ export default function ResourceHub({navigation}) {
             </Card>
           )
         })}
+        {/** Resouce nav cards*/}
         {resources.map((item) => (
           <Card
             key={item.title}
@@ -250,6 +256,7 @@ export default function ResourceHub({navigation}) {
           />
         </Card>
         ))}
+        {/**Preparedness guides (links to government resources) */}
         <Card
           style={styles.card}
           onPress={() => setShowGuides(!showGuides)}

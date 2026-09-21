@@ -2,6 +2,7 @@ import { Modal, View, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { globalStyles } from '../theme/globalStyles';
 
+//Create the modal that appears when the user loses the game
 export default function GameOver({ visible, startOver, navigation }) {
   if (!visible) return null;
 
@@ -13,9 +14,10 @@ export default function GameOver({ visible, startOver, navigation }) {
         alignItems: 'center',
         backgroundColor: 'rgba(0,0,0,0.5)',
       }}>
+        {/**Modal card (content for the game over modal) */}
         <View style={globalStyles.modalCard}>
           <Text style={globalStyles.modalTitle}>Game Over</Text>
-
+          {/**Two buttons to either restart or return home */}
           <TouchableOpacity
             style={globalStyles.primaryButton}
             onPress={startOver}
