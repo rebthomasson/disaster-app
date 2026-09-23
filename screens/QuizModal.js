@@ -65,7 +65,7 @@ export default function QuizModal({ visible, quiz, onClose, onDone}) {
         <Modal visible={visible} transparent animationType='fade'>
             <View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'rgba(0,0,0,0.5)'}}>
                 <View style={{ backgroundColor: theme.colors.accent, padding:20, borderRadius: 10}}>
-                    <Text style={{fontSize:18, marginBottom:10, fontFamily: theme.fonts.medium, color: theme.colors.surface}}>{current.question}</Text>
+                    <Text style={{fontSize:18, marginBottom:10, fontFamily: theme.fonts.medium, color: theme.colors.text}}>{current.question}</Text>
 
                     {current.options.map((opt, i) => (
                         <TouchableOpacity

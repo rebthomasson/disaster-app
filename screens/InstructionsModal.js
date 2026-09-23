@@ -1,6 +1,7 @@
 import React from 'react';
-import { Modal, View, Text, Button, StyleSheet, ScrollView } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { theme } from '../theme/theme';
+import { globalStyles } from '../theme/globalStyles';
 
 //Instructions modal to show the users how to play the game on first visit
 export default function InstructionsModal({ onClose, visible, level }) {
@@ -72,7 +73,12 @@ export default function InstructionsModal({ onClose, visible, level }) {
                           Complete all tasks and reach the finish tile to complete the level. After Level 3, you unlock the Victory screen!
                       </Text>
 
-                      <Button title='Start Game' onPress={onClose} />
+                      <TouchableOpacity
+                        style={globalStyles.primaryButton}
+                        onPress={onClose}
+                    >
+                        <Text style={globalStyles.primaryButtonText}>Start Level</Text>
+                    </TouchableOpacity>
                   </ScrollView>
                 </View>
             </View>
@@ -85,14 +91,14 @@ const styles= StyleSheet.create({
     title: {
         fontSize: 26,
         fontFamily: theme.fonts.bold,
-        color: theme.colors.surface,
+        color: theme.colors.text,
         textAlign: 'center',
         marginBottom: 20,
     },
     sectionTitle: {
         fontSize: 20,
         fontFamily: theme.fonts.bold,
-        color: theme.colors.surface,
+        color: theme.colors.text,
         marginTop: 15,
         marginBottom: 5,
     },
@@ -101,6 +107,6 @@ const styles= StyleSheet.create({
         marginBottom: 10,
         lineHeight: 22,
         fontFamily: theme.fonts.regular,
-        color: theme.colors.surface,
+        color: theme.colors.text,
     },
 })

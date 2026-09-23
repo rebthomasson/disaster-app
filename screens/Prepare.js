@@ -79,7 +79,7 @@ export default function Prepare({navigation}) {
     <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <MaterialCommunityIcons name="bag-personal" size={40} color={theme.colors.surface} />
+          <MaterialCommunityIcons name="bag-personal" size={40} color={theme.colors.text} />
           <Text style={styles.title}>Prepare</Text>
           <Text style={styles.subtitle}>Plan • Organize • Be Ready</Text>
         </View>
@@ -229,18 +229,18 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: 16,
     fontSize: 24,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     textAlign: 'center',
     fontFamily: theme.fonts.bold
   },
   subtitle: {
     fontSize: 14,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     fontFamily: theme.fonts.medium
   },
   infoCard: {
     marginBottom: 16,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     borderLeftWidth: 6,
     borderLeftColor: theme.colors.border,
     fontFamily: theme.fonts.regular,
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 16,
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.text
   },
   cardIcon: {
     backgroundColor: theme.colors.background

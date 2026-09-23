@@ -54,7 +54,7 @@ const faqs = [
       },
       {
         question: 'What should I bring to a shelter?',
-        answer: 'Bring your emergency kit with you (includes medications, identification, documents, hygiene supplies, and any essential personal items.'
+        answer: 'Bring your emergency kit with you (includes medications, identification, documents, hygiene supplies, and any essential personal items).'
       },
       {
         question: 'Can I bring pets to a shelter?',
@@ -109,7 +109,7 @@ export default function FAQs({navigation}) {
           <MaterialCommunityIcons
             name="help-circle"
             size={40}
-            color={theme.colors.surface}
+            color={theme.colors.text}
           />
           <IconButton
             icon="arrow-left"
@@ -201,17 +201,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     fontFamily: theme.fonts.medium,
   },
   infoCard: {
     marginBottom: 16,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     borderLeftWidth: 6,
     borderLeftColor: theme.colors.border,
     elevation: 4,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   answer: {
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: theme.colors.text,
+    backgroundColor: theme.colors.surface,
     fontFamily: theme.fonts.regular
   }
 })

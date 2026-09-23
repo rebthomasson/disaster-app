@@ -343,14 +343,14 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: theme.colors.surface,
+    color: theme.colors.text,
     fontSize: 28,
     fontFamily: theme.fonts.bold,
     marginTop: 8,
   },
 
   subtitle: {
-    color: theme.colors.surface,
+    color: theme.colors.text,
     fontFamily: theme.fonts.medium,
     marginTop: 4,
   },
@@ -360,12 +360,12 @@ const styles = StyleSheet.create({
     borderLeftWidth: 6,
     borderLeftColor: '#d32f2f',
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     borderWidth: 1
   },
 
   card: {
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.text,
       borderRadius: theme.radius.m,
       marginVertical: theme.spacing.s,
       borderWidth: 1,
@@ -405,18 +405,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    color: theme.colors.surface
+    color: theme.colors.text
   },
 
   gridCard: {
     width: '48%',
     marginBottom: 12,
-    color: theme.colors.surface
+    color: theme.colors.text
   },
 
   gridContent: {
     alignItems: 'center',
-    color: theme.colors.surface
+    color: theme.colors.text
   },
   gridItemText: {
     marginTop: 8,

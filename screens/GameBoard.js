@@ -574,7 +574,7 @@ export default function GameBoard() {
               <Text style={{ 
                 fontSize: 40,
                 fontFamily: theme.fonts.bold,
-                color: theme.colors.surface, 
+                color: theme.colors.text, 
               }}>
                 {isRolling ? `🎲 🎲 🎲 ${diceRoll}` : `🎲 ${diceRoll}`}
               </Text>
@@ -590,7 +590,7 @@ export default function GameBoard() {
                 position: 'absolute',
                 top: theme.spacing.s,
                 right: theme.spacing.s,
-                backgroundColor: theme.colors.surface,
+                backgroundColor: theme.colors.text,
                 borderRadius: theme.radius.m,
                 elevation: 4,
             }}
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.m,
     paddingVertical: theme.spacing.s,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     },
@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
   },
   inventorySlot: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     paddingVertical: theme.spacing.s,
     paddingHorizontal: theme.spacing.m,
     borderRadius: theme.radius.m,
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: theme.colors.primary,
     paddingVertical: theme.spacing.s,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     borderBottomWidth: 1,
     borderColor: theme.colors.border,
   },

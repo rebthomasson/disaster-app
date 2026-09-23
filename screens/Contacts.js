@@ -125,7 +125,7 @@ export default function EmergencyContacts({navigation}) {
           <MaterialCommunityIcons
             name="contacts"
             size={40}
-            color={theme.colors.surface}
+            color={theme.colors.text}
           />
 
           <Text style={styles.title}>Emergency Contacts</Text>
@@ -148,7 +148,7 @@ export default function EmergencyContacts({navigation}) {
         {/**Form to add a contact */}
         <Card style={styles.formCard}>
           <Card.Content>
-            <Text style={{fontSize: 18, fontFamily: theme.fonts.bold, color: theme.colors.surface, paddingBottom: 10}}>Add Contact</Text>
+            <Text style={{fontSize: 18, fontFamily: theme.fonts.bold, color: theme.colors.text, paddingBottom: 10}}>Add Contact</Text>
             <TextInput
               label="Name"
               value={name}
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     textAlign: 'center',
     paddingVertical: 10,
   },
@@ -265,6 +265,6 @@ const styles = StyleSheet.create({
   },
   contactCard: {
     marginBottom: 8,
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.text
   },
 });

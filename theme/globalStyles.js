@@ -2,7 +2,7 @@ import { theme } from "./theme";
 //Creates unified styling for the entire app (cards, titles, body, modals)
 export const globalStyles = {
   modalCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     padding: theme.spacing.l,
     borderRadius: theme.radius.l,
     width: '85%',

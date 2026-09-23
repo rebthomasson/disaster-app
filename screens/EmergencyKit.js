@@ -93,7 +93,7 @@ export default function EmergencyKit({navigation}) {
     <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <MaterialCommunityIcons name="check-circle-outline" size={40} color={theme.colors.surface} />
+          <MaterialCommunityIcons name="check-circle-outline" size={40} color={theme.colors.text} />
           <Text style={styles.title}>Emergency Kit Builder</Text>
           <IconButton
             icon="arrow-left"
@@ -177,19 +177,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     textAlign: 'center',
   },
   infoCard: {
     marginBottom: 16,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     borderLeftWidth: 6,
     borderLeftColor: theme.colors.border,
     elevation: 4,
   },
   card: {
     marginBottom: 16,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
   },
   cardIcon: {
     backgroundColor: theme.colors.background

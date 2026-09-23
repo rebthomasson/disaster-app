@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme/theme';
 import { globalStyles } from '../theme/globalStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //Array for the resource hub for different screen links
 const resources = [
@@ -55,6 +56,36 @@ export default function ResourceHub({navigation}) {
   const [alerts, setAlerts] = useState([]);
   const [showGuides, setShowGuides] = useState(false);
   const [TESTING_MODE, setTestingMode] = useState(false);
+  const ALERT_CACHE = 'cachedWeatherAlerts';
+
+  //Cache weather alerts for use when offline
+  async function saveAlerts(alerts) {
+    try {
+      await AsyncStorage.setItem(
+        ALERT_CACHE,
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          alerts,
+        })
+      );
+    } catch (error) {
+      console.log('Failed to cache alerts:', error);
+    }
+  }
+
+  async function loadCachedAlerts() {
+    try {
+      const cached = await AsyncStorage.getItem(ALERT_CACHE);
+
+      if (!cached) return null;
+
+      return JSON.parse(cached);
+    } catch (error) {
+      console.log('Failed to load cached alerts: ', error);
+      return null;
+    }
+  }
+
   //Requests users location permission and fetches location if granted
   useEffect(() => {
     (async() => {
@@ -68,6 +99,7 @@ export default function ResourceHub({navigation}) {
       setLocation(loc);
     })();
   }, []);
+
   //Fetch the NWS zone from user's coordinates
   async function getNWSZone(lat, lon) {
     const response = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
@@ -80,6 +112,7 @@ export default function ResourceHub({navigation}) {
     const data = await response.json();
     return data.properties.forecastZone;
   }
+
   //Fetches the active alerts for a given NWS zone
   async function getAlerts(zoneId) {
     const response = await fetch(`https://api.weather.gov/alerts/active?zone=${zoneId}`, {
@@ -92,17 +125,44 @@ export default function ResourceHub({navigation}) {
     const data = await response.json();
     return data.features;
   }
+
   //Fetch alerts based on the user's location
   async function fetchLocalAlerts() {
     if (!location) return;
 
-    const {latitude, longitude} = location.coords;
+    try {
+      const {latitude, longitude} = location.coords;
 
-    const zoneId = await getNWSZone(latitude, longitude);
-    const alerts = await getAlerts(zoneId);
+      const zoneId = await getNWSZone(latitude, longitude);
+      const alerts = await getAlerts(zoneId);
 
-    setAlerts(alerts);
+      setAlerts(alerts);
+
+      await saveAlerts(alerts);
+    } catch (error) {
+      console.log('Failed to fetch live alerts: ', error);
+
+      const cachedData = await loadCachedAlerts();
+
+      if (cachedData?.alerts) {
+        console.log('Using cached alerts');
+        setAlerts(cachedData.alerts);
+      }
+    }
   }
+
+  useEffect(() => {
+    async function initializeAlerts() {
+      const cache = await loadCachedAlerts();
+
+      if (cache?.alerts) {
+        console.log('Using cached alerts');
+        setAlerts(cache.alerts);
+      }
+    }
+    initializeAlerts();
+  }, []);
+
   //Suto-refreshes the alerts every 30 secs when testing mode isn't enabled
   useEffect(() => {
     if (!location) return;
@@ -137,7 +197,7 @@ export default function ResourceHub({navigation}) {
       borderColor: '#D32F2F',
     },
     info: {
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.text,
       borderColor: theme.colors.border,
     },
   }
@@ -167,7 +227,7 @@ export default function ResourceHub({navigation}) {
           <MaterialCommunityIcons
             name="shield-alert"
             size={40}
-            color={theme.colors.surface}
+            color={theme.colors.text}
           />
           <View style={{marginLeft: 12}}>
             <Text style={styles.title}>Resource Hub</Text>
@@ -249,7 +309,7 @@ export default function ResourceHub({navigation}) {
           >
           <Card.Title
             title={item.title}
-            style={{color: theme.colors.surface}}
+            style={{color: theme.colors.text}}
             left={(props) => (
               <Avatar.Icon {...props} icon={item.icon} style={styles.cardIcon} />
             )}
@@ -329,17 +389,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     fontFamily: theme.fonts.medium,
   },
   card: {
     marginBottom: 12,
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.text
   },
   cardIcon: {
     backgroundColor: theme.colors.background

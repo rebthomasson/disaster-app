@@ -90,7 +90,7 @@ export default function FamilyPlan({navigation}) {
     <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <MaterialCommunityIcons name="clipboard-account" size={40} color={theme.colors.surface} />
+          <MaterialCommunityIcons name="clipboard-account" size={40} color={theme.colors.text} />
           <Text style={styles.title}>Family Emergency Plan</Text>
           <IconButton
             icon="arrow-left"
@@ -287,26 +287,26 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontFamily: theme.fonts.bold,
     fontSize: 24,
-    color: theme.colors.surface,
+    color: theme.colors.text,
     textAlign: 'center',
   },
   infoCard: {
     marginBottom: 16,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
     borderLeftWidth: 6,
     borderLeftColor: theme.colors.border,
     elevation: 4,
   },
   card: {
     marginBottom: 16,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.text,
   },
   cardIcon: {
     backgroundColor: theme.colors.background
   },
   input: {
     marginBottom: 12,
-    backgroundColor: theme.colors.text
+    backgroundColor: theme.colors.surface
   },
   saveButton: {
     marginVertical: 20,
