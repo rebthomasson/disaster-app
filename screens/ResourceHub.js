@@ -88,16 +88,20 @@ export default function ResourceHub({navigation}) {
 
   //Requests users location permission and fetches location if granted
   useEffect(() => {
-    (async() => {
-      let {status} = await Location.requestForegroundPermissionsAsync();
+    const getLocation = async () => {
+      const { status } =
+        await Location.requestForegroundPermissionsAsync();
+
       if (status !== 'granted') {
         setErrorMsg('Permission denied');
         return;
       }
 
-      let loc = await Location.getCurrentPositionAsync({});
+      const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc);
-    })();
+    };
+
+    getLocation();
   }, []);
 
   //Fetch the NWS zone from user's coordinates
@@ -110,7 +114,8 @@ export default function ResourceHub({navigation}) {
     });
 
     const data = await response.json();
-    return data.properties.forecastZone;
+
+    return data?.properties?.forecastZone ?? null;
   }
 
   //Fetches the active alerts for a given NWS zone
@@ -134,6 +139,12 @@ export default function ResourceHub({navigation}) {
       const {latitude, longitude} = location.coords;
 
       const zoneId = await getNWSZone(latitude, longitude);
+
+      if (!zoneId) {
+        console.log('No zone found');
+        return;
+      }
+
       const alerts = await getAlerts(zoneId);
 
       setAlerts(alerts);

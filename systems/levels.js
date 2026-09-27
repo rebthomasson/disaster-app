@@ -32,7 +32,7 @@ const floodTasks = [
                 answer: 3
             },
             {
-                question: "What is the safest action to take if you enconter a flooded roadway while driving?",
+                question: "What is the safest action to take if you encounter a flooded roadway while driving?",
                 options: ["Drive through slowly if you estimate the water is less than a foot deep", "Shift your car into a lower gear and accelerate quickly", "Wait for another large vehicle to cross first, and then follow closely behind it", "Turn around and find an alternate route"],
                 answer: 3
             }
