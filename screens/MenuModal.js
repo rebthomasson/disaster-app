@@ -19,7 +19,8 @@ export default function MenuModal({
   setTimeLeft,
   setPathTiles,
   resetPreparedness,
-  levels
+  levels,
+  setActiveModal
 }) {
     return (
         //Uses the react-native-paper portal component for the menu
@@ -62,6 +63,7 @@ export default function MenuModal({
                       setTimeLeft(levels[0].timeLimit);
                       setPathTiles(levels[0].pathTiles);
                       resetPreparedness(); //Reset the preparedness goals
+                      setActiveModal('instructions');
                     }}
                   >
                     <Text style={globalStyles.outlineButtonText}> Reset Game </Text>
