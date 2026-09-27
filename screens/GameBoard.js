@@ -727,6 +727,7 @@ export default function GameBoard() {
                 await AsyncStorage.removeItem('completedGoals');
               }}
               levels={levels}
+              setActiveModal={setActiveModal}
             />
           )}
         </ImageBackground>
